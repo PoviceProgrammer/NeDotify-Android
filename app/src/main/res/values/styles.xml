@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.NeDotify" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/launch_background</item>
+        <item name="android:colorAccent">#00B6F5</item>
+    </style>
+</resources>

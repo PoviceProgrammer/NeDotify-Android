@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-18",
+  "stage": 5,
+  "tasks": [
+    ":app:testDebugUnitTest",
+    ":app:lintDebug",
+    ":app:compileDebugAndroidTestKotlin"
+  ],
+  "apk_packaging_executed": false,
+  "existing_apks_unchanged": true,
+  "existing_apks": [
+    {
+      "path": "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      "sha256": "01e69f9438630d011162398318c7a255b2470a3e16e898c84a5a024b152c13e2",
+      "size": 1224158,
+      "mtime_ns": 1792323255643087700
+    },
+    {
+      "path": "app/build/outputs/apk/debug/app-debug.apk",
+      "sha256": "2407578fe76b480dae6124f0aaef26d651e0042baa6f2711ed4ff6c9a0a9c603",
+      "size": 25112688,
+      "mtime_ns": 1792324140895829700
+    }
+  ],
+  "local_properties_unchanged": true,
+  "local_properties_sha256": "74ec82942d104a8be63b57ac7f2b7022add26ceaa3a51ebc427874ee9f517e57",
+  "authors": [
+    "root: integration/desktop/local tags/lyrics disk cache/network bounds",
+    "finish_audio: dual-deck/audio focus/effects/quality settings/tests",
+    "finish_discovery: discovery/smart/backup v2/lyrics cascade/search/dynamic accent/tests",
+    "finish_providers: PKCE/secure store/providers/catalog/matching/tests"
+  ],
+  "android_runtime_checked": false,
+  "independent_review_of_current_sources": false
+}

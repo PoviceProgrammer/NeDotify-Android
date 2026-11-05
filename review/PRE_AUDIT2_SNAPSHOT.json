@@ -1,0 +1,12 @@
+{
+  "date": "2026-10-19",
+  "stage": "bugfix",
+  "files": 187,
+  "manifest_sha256": "b1a9c20e4b6f09fce72913c4baf2000d4590a766dbeeac338b5fb53b39cb5647",
+  "unit_passed": 217,
+  "new_unit_tests": 44,
+  "instrumentation_compiled_only": 55,
+  "new_instrumentation_tests": 7,
+  "apk_built": false,
+  "runtime_checked": false
+}

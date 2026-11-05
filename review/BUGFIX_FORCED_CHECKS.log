@@ -1,0 +1,87 @@
+Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp\nedotify-B3544D227D
+
+> Configure project :app
+WARNING: The option setting 'android.overridePathCheck=true' is experimental.
+The current default is 'false'.
+
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:processDebugNavigationResources
+> Task :app:javaPreCompileDebug
+> Task :app:parseDebugLocalResources
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:compileDebugNavigationResources
+> Task :app:generateDebugRFile
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:extractProguardFiles
+> Task :app:generateDebugAndroidTestResources
+> Task :app:packageDebugAndroidTestResources
+> Task :app:processDebugAndroidTestNavigationResources
+> Task :app:parseDebugAndroidTestLocalResources
+> Task :app:generateDebugAndroidTestRFile
+> Task :app:kspDebugKotlin
+> Task :app:compileDebugKotlin
+w: file:///C:/Temp/nedotify-B3544D227D/project/app/src/main/java/ru/nedotify/app/player/AudioRuntime.kt:6:8 'class Virtualizer : AudioEffect' is deprecated. Deprecated in Java.
+w: file:///C:/Temp/nedotify-B3544D227D/project/app/src/main/java/ru/nedotify/app/ui/BrowseComponents.kt:43:75 'val Icons.Outlined.ArrowForward: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.ArrowForward.
+w: file:///C:/Temp/nedotify-B3544D227D/project/app/src/main/java/ru/nedotify/app/ui/LibraryScreen.kt:110:81 'val Icons.Outlined.Sort: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.Sort.
+w: file:///C:/Temp/nedotify-B3544D227D/project/app/src/main/java/ru/nedotify/app/ui/SearchScreen.kt:116:86 'val Icons.Outlined.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.ArrowBack.
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:processDebugJavaRes
+> Task :app:kspDebugUnitTestKotlin
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:lintAnalyzeDebug
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=C:\Temp\nedotify-B3544D227D
+
+AudioSettingsStoreTest > concurrentIndependentControlsPatchTheLatestPersistedSettings FAILED
+    java.io.IOException at FileStorage.kt:114
+        Caused by: java.io.IOException at FileStorage.kt:114
+
+AudioSettingsStoreTest > separateBandEditsPreserveEachOtherAndSurviveStoreRecreation FAILED
+    java.io.IOException at FileStorage.kt:114
+        Caused by: java.io.IOException at FileStorage.kt:114
+
+218 tests completed, 2 failed, 1 skipped
+
+> Task :app:testDebugUnitTest FAILED
+
+
+[Incubating] Problems report is available at: file:///C:/Temp/nedotify-B3544D227D/project/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///C:/Temp/nedotify-B3544D227D/project/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/9.3.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 4m 29s
+36 actionable tasks: 36 executed

@@ -1,0 +1,17 @@
+﻿{
+    "generated_utc":  "2026-10-20T19:01:37.0736325Z",
+    "date":  "2026-10-20",
+    "stage":  "remediation-a8",
+    "files":  254,
+    "manifest_sha256":  "fc5ee57d1ae4e2c58115c542692205974839eb3c5f1377b769a42db818b8bae1",
+    "unit_tests":  604,
+    "unit_passed":  604,
+    "unit_failures":  0,
+    "lint_errors":  0,
+    "lint_warnings":  2,
+    "lint_hints":  0,
+    "instrumentation_compiled_only":  68,
+    "instrumentation_executed":  0,
+    "apk_built":  false,
+    "runtime_checked":  false
+}

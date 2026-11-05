@@ -1,0 +1,135 @@
+{
+  "date": "2026-10-18",
+  "stage": "library-backup, source only after APK 0.2.0",
+  "unit": {
+    "passed": 57,
+    "tests": 58,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "classes": [
+      {
+        "class": "ru.nedotify.app.data.BackupCodecTest",
+        "tests": 14,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.BackupMergeTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.LiveProviderProbeTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      },
+      {
+        "class": "ru.nedotify.app.data.SignedUrlExpiryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SoundCloudFormatTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SoundCloudSingleFlightTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SourceContractTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.StreamCacheTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.YouTubeMetadataTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.downloads.DownloadCancellationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.downloads.DownloadKeysTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.ListeningClockTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.ListeningHistoryTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.QueueSelectionTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.ui.PlaybackErrorsTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 14,
+    "by_id": {
+      "AndroidGradlePluginVersion": 1,
+      "ExportedService": 1,
+      "GradleDependency": 4,
+      "NewerVersionAvailable": 8
+    }
+  },
+  "instrumentation": {
+    "compiled_tests": 18,
+    "run": false
+  },
+  "apk_built": false,
+  "existing_apk_sha256": "2407578fe76b480dae6124f0aaef26d651e0042baa6f2711ed4ff6c9a0a9c603",
+  "independent_review_of_this_stage": false
+}

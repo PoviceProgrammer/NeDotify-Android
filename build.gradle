@@ -1,0 +1,193 @@
+/*
+ * The plugin classpath (AGP, the Compose compiler plugin, KSP) is resolved
+ * here, in the root project, and not in the settings script. Without a lock
+ * state its versions are pinned only by the checksums in
+ * gradle/verification-metadata.xml: an unexpected version fails loudly, but
+ * the lock state does not say WHICH version is expected. The lock state of
+ * this configuration is buildscript-gradle.lockfile; it is refreshed with
+ * --write-locks (see android/README.md).
+ *
+ * A buildscript block must come before the plugins block.
+ */
+buildscript {
+    configurations.classpath {
+        resolutionStrategy.activateDependencyLocking()
+    }
+}
+
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.ksp) apply false
+}
+
+/*
+ * REG P2-77 - the lint gate must not be a function of the network.
+ *
+ * The "a newer version is available" detectors (NewerVersionAvailable,
+ * GradleDependency, AndroidGradlePluginVersion) read maven-metadata.xml over
+ * the network and cache the answer for days in
+ * app/build/intermediates/lint-cache/.../maven-versions/. The audit measured
+ * 15, 13 and 4 warnings for the SAME source, depending on the state of that
+ * cache and of the network. A gate whose result depends on the network is not
+ * a gate.
+ *
+ * checkDependencies = false switches the dependency checks off, so the lint
+ * result is a function of the source alone. Measured on AGP 9.1.1, that flag
+ * does NOT remove the three version detectors - they are switched off by name
+ * in android/lint.xml. The information is not lost: the task
+ * :reportNewerVersions below reports the newer versions and never fails the
+ * build. It is deliberately NOT part of the gate - see android/AGENTS.md.
+ *
+ * The configuration lives here, in the root project, and not in
+ * app/build.gradle: the root project is the file that owns the build system.
+ * `plugins.withId` runs the action when the module applies the plugin, and
+ * the module's own `android { }` block cannot undo it afterwards.
+ */
+subprojects { sub ->
+    sub.plugins.withId('com.android.application') {
+        sub.extensions.configure(com.android.build.api.dsl.ApplicationExtension) { extension ->
+            extension.lint.checkDependencies = false
+            extension.lint.abortOnError = true
+        }
+    }
+}
+
+/*
+ * The body of the version report. It is a closure of the project so that the
+ * task below can wrap it: the report must never fail the build.
+ *
+ * It resolves nothing - it only reads maven-metadata.xml - so it cannot
+ * change what is built.
+ */
+ext.reportNewerVersions = {
+    def catalog = file('gradle/libs.versions.toml')
+    def versions = [:]
+    def libraries = [:]
+    def plugins = [:]
+    def section = ''
+    catalog.readLines('UTF-8').each { rawLine ->
+        def line = rawLine.trim()
+        if (!line || line.startsWith('#')) { return }
+        if (line.startsWith('[')) { section = line.replaceAll('^\\[|\\]$', ''); return }
+        if (section == 'versions') {
+            def matcher = (line =~ /^([A-Za-z0-9_.-]+)\s*=\s*"([^"]+)"$/)
+            if (matcher.matches()) { versions[matcher.group(1)] = matcher.group(2) }
+            return
+        }
+        if (section == 'libraries' || section == 'plugins') {
+            def matcher = (line =~ /^([A-Za-z0-9_.-]+)\s*=\s*\{(.+)\}$/)
+            if (!matcher.matches()) { return }
+            def alias = matcher.group(1)
+            def body = matcher.group(2)
+            // A body holds SEVERAL keys, so the search is a find(), never a
+            // whole-string match.
+            def moduleMatcher = (body =~ /module\s*=\s*"([^"]+)"/)
+            def refMatcher = (body =~ /version\.ref\s*=\s*"([^"]+)"/)
+            def idMatcher = (body =~ /id\s*=\s*"([^"]+)"/)
+            def entry = [module: moduleMatcher.find() ? moduleMatcher.group(1) : null,
+                         ref: refMatcher.find() ? refMatcher.group(1) : null,
+                         id: idMatcher.find() ? idMatcher.group(1) : null]
+            if (section == 'libraries') { libraries[alias] = entry } else { plugins[alias] = entry }
+        }
+    }
+
+    // A version is compared as a tuple of numbers; anything else (a
+    // snapshot, a qualifier) is not a stable release and is ignored.
+    def versionKey = { String value ->
+        if (!(value ==~ /\d+(\.\d+)*/)) { return null }
+        value.split('\\.').collect { it.toInteger() }
+    }
+    // A plain list comparison does NOT work here: Groovy compares the two
+    // lists as objects. The tuples are compared element by element, and a
+    // missing element counts as a zero ("1.2" == "1.2.0").
+    def compareVersions = { List a, List b ->
+        int size = Math.max(a.size(), b.size())
+        for (int i = 0; i < size; i++) {
+            int x = i < a.size() ? a[i] : 0
+            int y = i < b.size() ? b[i] : 0
+            if (x != y) { return x <=> y }
+        }
+        return 0
+    }
+    def newestOf = { String body ->
+        def candidates = []
+        (body =~ /<version>([^<]+)<\/version>/).each { match ->
+            def key = versionKey(match[1])
+            if (key != null) { candidates << [text: match[1], key: key] }
+        }
+        if (!candidates) { return null }
+        def best = candidates.sort { a, b -> compareVersions(a.key, b.key) }.last()
+        return best.text
+    }
+    def fetch = { String coordinate, List<String> bases ->
+        def parts = coordinate.split(':')
+        def path = parts[0].replace('.', '/') + '/' + parts[1] + '/maven-metadata.xml'
+        for (base in bases) {
+            try {
+                def connection = new URL(base + path).openConnection()
+                connection.connectTimeout = 5000
+                connection.readTimeout = 5000
+                connection.setRequestProperty('User-Agent', 'NeDotify-Android-build')
+                return connection.inputStream.getText('UTF-8')
+            } catch (Exception ignored) {
+                // The repository did not answer. Try the next one.
+            }
+        }
+        return null
+    }
+
+    def bases = ['https://dl.google.com/dl/android/maven2/', 'https://repo.maven.apache.org/maven2/']
+    def portal = 'https://plugins.gradle.org/m2/'
+    def rows = []
+    libraries.sort().each { alias, entry ->
+        if (!entry.module || !entry.ref) { return }
+        def pinned = versions[entry.ref]
+        if (!pinned) { return }
+        def body = fetch(entry.module, bases)
+        def newest = body ? newestOf(body) : null
+        rows << [alias: alias, coordinate: entry.module, pinned: pinned,
+                 newest: newest ?: 'unknown (no answer)']
+    }
+    plugins.sort().each { alias, entry ->
+        if (!entry.id || !entry.ref) { return }
+        def pinned = versions[entry.ref]
+        if (!pinned) { return }
+        // The plugin marker carries the version of the plugin itself.
+        def marker = entry.id + ':' + entry.id + '.gradle.plugin'
+        def body = fetch(marker, [portal] + bases)
+        def newest = body ? newestOf(body) : null
+        rows << [alias: alias, coordinate: entry.id, pinned: pinned,
+                 newest: newest ?: 'unknown (no answer)']
+    }
+
+    println 'Newer versions (report only - this task never fails the build):'
+    rows.each { row ->
+        def state = row.newest == row.pinned ? 'up to date' : ('newer: ' + row.newest)
+        println String.format('  %-22s %-45s pinned=%-12s %s', row.alias, row.coordinate, row.pinned, state)
+    }
+    println "Checked ${rows.size()} coordinates. The lint gate does not depend on this report."
+}
+
+/*
+ * A separate, NON-BLOCKING report of the newer versions.
+ *
+ * The task never fails the build: a network error, a repository that does not
+ * answer or a version that cannot be compared produce a line of output, not
+ * an exception.
+ *
+ *     ./gradlew :reportNewerVersions
+ */
+tasks.register('reportNewerVersions') {
+    group = 'verification'
+    description = 'Reports the newer versions of the catalog dependencies. Never fails the build.'
+    doLast {
+        // The task must never fail the build: every error becomes a line of
+        // output. A report that cannot be produced is not a broken build.
+        try {
+            project.ext.reportNewerVersions()
+        } catch (Exception failure) {
+            println "The version report failed (${failure.getClass().getSimpleName()}: ${failure.message}). The build is not affected."
+        }
+    }
+}

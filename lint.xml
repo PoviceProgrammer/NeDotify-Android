@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Lint configuration for the whole Android tree.
+
+    AGP collects every lint.xml from the module directory up to the root
+    project directory, so this file applies to :app as well.
+
+    ---------------------------------------------------------------------
+    1. PropertyEscape - silenced FOR ONE FILE, not for the whole project
+    ---------------------------------------------------------------------
+    android/local.properties is machine-local and gitignored. It holds the
+    path of the developer's Android SDK, and the way that path is spelled
+    differs per machine and per tool (Android Studio writes
+    "C\:\\Users\\me\\Android\\Sdk", a hand-written file usually says
+    "C:/Users/me/Android/Sdk"). PropertyEscape is right about the format -
+    an unescaped backslash or drive letter colon really is mis-parsed by
+    java.util.Properties - but a check that fails the build because of a
+    file that is not under version control fails on every developer who
+    does not have the same SDK path.
+
+    The path matches the FILE NAME, not one machine's directory: the report
+    names the ASCII junction the build was started from
+    ("C:\Temp\nedotify-<id>\project\local.properties") and a CI runner names
+    its checkout. Every other file of the tree stays checked -
+    android/gradle.properties among them. A global `severity="ignore"`
+    would have silenced the check for the repository's own property files
+    as well, and the report of the area claimed a per-file suppression that
+    the file did not contain.
+
+    ---------------------------------------------------------------------
+    2. The three "a newer version is available" detectors
+    ---------------------------------------------------------------------
+    NewerVersionAvailable, GradleDependency and AndroidGradlePluginVersion
+    read a repository over the network and cache the answer in
+    app/build/intermediates/lint-cache/lintAnalyzeDebug/maven-versions/.
+    The audit measured 15, 13 and 4 warnings for the SAME source, depending
+    on the state of that cache and of the network: a gate whose result
+    depends on the network is not a gate, and a clean checkout produced a
+    different warning set than a warm one.
+
+    `lint { checkDependencies = false }` (android/build.gradle) does NOT
+    remove them - measured on AGP 9.1.1: with the flag false the lint model
+    is regenerated and the three detectors still report (17 warnings, the
+    same as with the flag on). They are therefore switched off HERE, and the
+    information is produced by the separate, NON-BLOCKING task
+    `:reportNewerVersions`, which never fails the build.
+
+    Every other check stays enabled, and lint still aborts on an error
+    (android/build.gradle: lint { abortOnError = true; checkDependencies = false }).
+-->
+<lint>
+    <issue id="PropertyEscape">
+        <ignore path="local.properties" />
+    </issue>
+    <issue id="NewerVersionAvailable" severity="ignore" />
+    <issue id="GradleDependency" severity="ignore" />
+    <issue id="AndroidGradlePluginVersion" severity="ignore" />
+</lint>

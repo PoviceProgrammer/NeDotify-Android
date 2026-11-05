@@ -1,0 +1,14 @@
+{
+  "apk_unchanged": true,
+  "apk_bytes": 25112688,
+  "apk_sha256": "2407578fe76b480dae6124f0aaef26d651e0042baa6f2711ed4ff6c9a0a9c603",
+  "apk_previous_write_utc": "2026-10-18T11:49:00.8958297Z",
+  "local_properties_unchanged": true,
+  "local_properties_sha256": "74ec82942d104a8be63b57ac7f2b7022add26ceaa3a51ebc427874ee9f517e57",
+  "tasks": [
+    ":app:testDebugUnitTest",
+    ":app:lintDebug",
+    ":app:compileDebugAndroidTestKotlin"
+  ],
+  "packaging_tasks_executed": false
+}

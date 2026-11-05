@@ -1,0 +1,100 @@
+{
+  "youtube": {
+    "searchCount": 11,
+    "error": "YouTube: Выполните вход"
+  },
+  "trace": [
+    {
+      "path": "/",
+      "clientIdMatches": 0,
+      "host": "soundcloud.com",
+      "length": 73406,
+      "status": 200
+    },
+    {
+      "path": "/assets/55-d39036ca.js",
+      "clientIdMatches": 1,
+      "host": "a-v2.sndcdn.com",
+      "length": 2910777,
+      "status": 200
+    },
+    {
+      "path": "/search/tracks",
+      "clientIdMatches": 0,
+      "host": "api-v2.soundcloud.com",
+      "length": 125981,
+      "status": 200
+    },
+    {
+      "path": "/",
+      "clientIdMatches": 0,
+      "host": "soundcloud.com",
+      "length": 73408,
+      "status": 200
+    },
+    {
+      "path": "/assets/55-d39036ca.js",
+      "clientIdMatches": 1,
+      "host": "a-v2.sndcdn.com",
+      "length": 2910777,
+      "status": 200
+    },
+    {
+      "path": "/tracks/554484609",
+      "clientIdMatches": 0,
+      "host": "api-v2.soundcloud.com",
+      "length": 4169,
+      "status": 200
+    },
+    {
+      "path": "/media/soundcloud:tracks:554484609/2ea9ab96-0200-415f-8e83-e85bf4a98db7/stream/hls",
+      "clientIdMatches": 0,
+      "host": "api-v2.soundcloud.com",
+      "length": 849,
+      "status": 200
+    },
+    {
+      "path": "/PpUAe84RbCDt/aac_160k/2ea9ab96-0200-415f-8e83-e85bf4a98db7/playlist.m3u8",
+      "clientIdMatches": 0,
+      "host": "playback.media-streaming.soundcloud.cloud",
+      "length": 18603,
+      "status": 200
+    },
+    {
+      "path": "/PpUAe84RbCDt/aac_160k/2ea9ab96-0200-415f-8e83-e85bf4a98db7/playlist.m3u8",
+      "clientIdMatches": 0,
+      "host": "playback.media-streaming.soundcloud.cloud",
+      "length": 18603,
+      "status": 200
+    },
+    {
+      "path": "/PpUAe84RbCDt/aac_160k/2ea9ab96-0200-415f-8e83-e85bf4a98db7/data000.m4s",
+      "clientIdMatches": 0,
+      "host": "playback.media-streaming.soundcloud.cloud",
+      "length": 7919,
+      "status": 206
+    },
+    {
+      "path": "/youtubei/v1/search",
+      "clientIdMatches": 0,
+      "host": "music.youtube.com",
+      "length": 571732,
+      "status": 200
+    },
+    {
+      "path": "/youtubei/v1/player",
+      "clientIdMatches": 0,
+      "host": "music.youtube.com",
+      "length": 3974,
+      "status": 200
+    }
+  ],
+  "soundcloud": {
+    "readable": true,
+    "searchCount": 25,
+    "http": 200,
+    "contentType": "application/vnd.apple.mpegurl",
+    "firstChunkReadable": true,
+    "hls": true
+  }
+}

@@ -1,0 +1,985 @@
+# Независимое ревью нативного Android-порта NeDotify
+
+Дата проверки: 2026-10-18
+Проверяющая сторона: отдельная сессия OpenCode. Другие ревью не использовались
+(файлы `review/REVIEW_A.md`, `review/REVIEW_B.md` намеренно **не открывались**,
+чтобы не наследовать чужие формулировки и выводы).
+Правки в исходники **не вносились**.
+
+---
+
+## 0. Важное расхождение в расположении проекта
+
+В задании сказано, что исходники лежат в родительской папке `android/`.
+В рабочем каталоге `C:\Users\Артур\NeDotify` действительно есть папка `android/`,
+но **это другой, устаревший проект**:
+
+| Признак | `NeDotify\android` | `NeDotify\AURA_Music_backup\AURA_Music_main\android` |
+|---|---|---|
+| package | `com.nedotify` | `ru.nedotify.app` |
+| `README.md` | нет | есть |
+| `review/SOURCE_SHA256.txt` | нет | есть |
+| `design/reference.png` | нет (`reference.png` в корне) | есть |
+| `verify.ps1` | нет | есть |
+| Состояние | только M1-скелет, M2–M6 «ЗАПЛАНИРОВАН» | M1–M5 реализованы, есть Room/Media3/Compose |
+
+Каталог `NeDotify\android` — обычная папка, не junction. Контрольных сумм в нём нет,
+поэтому проверка соответствия сумм для него невозможна.
+
+**Проверялась версия:** `C:\Users\Артур\NeDotify\AURA_Music_backup\AURA_Music_main\android`
+— единственное дерево, содержащее одновременно `README.md`, `PORTING_STATUS.md`,
+`design/reference.png` и `review/SOURCE_SHA256.txt`.
+
+---
+
+## 1. Контрольная сумма версии
+
+Манифест `review/SOURCE_SHA256.txt`, 39 записей:
+
+```
+OK=39  MISMATCH=0  MISSING=0  TOTAL=39
+```
+
+Проверка выполнена по всем 39 файлам манифеста (SHA-256, сравнение с содержимым).
+Расхождений нет.
+
+SHA-256 самого манифеста (для фиксации ревизии):
+
+```
+SOURCE_SHA256.txt  B8C5F20EE50F9C252257C0C4C5A00FEF50F624714BDCBDB1770C03B00CEB4B12
+```
+
+Ни один файл исходников не изменялся; все записи в Gradle попадали только в `build/`.
+
+---
+
+## 2. Фактически выполненные команды и результаты
+
+Окружение: JDK 21.0.12.101, Gradle 9.3.1, Android SDK Platform 37.0 / Build Tools 36.0.0.
+Путь проекта содержит кириллицу, поэтому сборка запускалась через ASCII-junction
+`C:\Temp\nedotify-B3544D227D\project` (уже существовал, создан не мной),
+**без запуска `verify.ps1`**, потому что он перезаписывает `local.properties`
+(см. дефект 13). Переменные окружения задавались на время команды.
+
+### 2.1 Полная сборка, unit-тесты, lint, APK, androidTest APK
+
+```powershell
+$env:JAVA_HOME='C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot'
+$env:ANDROID_HOME='C:\Temp\nedotify-B3544D227D\sdk'
+$env:GRADLE_USER_HOME='C:\Temp\nedotify-B3544D227D\gradle-home'
+Set-Location 'C:\Temp\nedotify-B3544D227D\project'
+.\gradlew.bat -Pandroid.overridePathCheck=true --console=plain --no-daemon `
+  :app:testDebugUnitTest :app:lintDebug :app:assembleDebug :app:assembleDebugAndroidTest
+```
+→ `BUILD SUCCESSFUL in 22s`, `EXITCODE=0` (задачи в основном UP-TO-DATE).
+
+### 2.2 Принудительный полный перезапуск тестов и lint
+
+```powershell
+.\gradlew.bat -Pandroid.overridePathCheck=true --console=plain `
+  :app:testDebugUnitTest :app:lintDebug --rerun-tasks -x :app:assembleDebug -x :app:assembleDebugAndroidTest
+```
+→ `BUILD SUCCESSFUL in 36s`, `35 actionable tasks: 35 executed` (реальный, не кэш).
+
+### 2.3 Результаты unit-тестов (фактический прогон)
+
+| Класс | tests | failures | errors | skipped |
+|---|---|---|---|---|
+| `SourceContractTest` | 4 | 0 | 0 | 0 |
+| `StreamCacheTest` | 3 | 0 | 0 | 0 |
+| `ListeningClockTest` | 1 | 0 | 0 | 0 |
+| `LiveProviderProbeTest` | 1 | 0 | 0 | **1** (`assumeTrue`, opt-in) |
+| **Итого** | **9** | **0** | **0** | **1** |
+
+Пройдены: LRC с двойными метками и дробной точностью; `streamExpiry` с запасом;
+отбрасывание `ctr-hls` и выбор progressive; явная ошибка YouTube без фиктивного URL;
+single-flight + отмена одного ожидающего; повторное разрешение при истечении/сбросе;
+отсутствие залипания `inflight` при ошибке; корректность `ListeningClock`.
+
+### 2.4 Lint
+
+`app/build/reports/lint-results-debug.xml`: **15 замечаний, 0 ошибок**
+(`lint { abortOnError = true }` — сборка прошла).
+
+| id | кол-во | severity |
+|---|---|---|
+| NewerVersionAvailable | 7 | Warning |
+| GradleDependency | 4 | Warning |
+| AndroidGradlePluginVersion | 1 | Warning |
+| **ExportedService** (`AndroidManifest.xml:19`) | 1 | Warning |
+| **DataExtractionRules** (`AndroidManifest.xml:12`) | 1 | Warning |
+| **UseKtx** (`PlaybackService.kt:55`) | 1 | Warning |
+
+Предупреждения Kotlin-компилятора: устаревший `AcceptedResultBuilder`
+(`PlaybackService.kt:70`), устаревший `Icons.Outlined.QueueMusic`
+(`MusicApp.kt:213, 279`), переименование параметра `onFailure` (`Sources.kt:27`).
+
+### 2.5 Opt-in живая проба провайдеров (README, раздел «Источники и проверка»)
+
+```powershell
+$env:NEDOTIFY_LIVE_PROBES='1'
+.\gradlew.bat -Pandroid.overridePathCheck=true --console=plain `
+  :app:testDebugUnitTest --tests ru.nedotify.app.data.LiveProviderProbeTest --rerun
+```
+→ `BUILD SUCCESSFUL`. Отчёт `app/build/reports/provider-probe.json`:
+
+* **SoundCloud**: `searchCount=25`, `http=200`,
+  `contentType=application/vnd.apple.mpegurl`, `hls=true`,
+  `firstChunkReadable=true` (сегмент `data000.m4s`, HTTP 206, 7 919 Б).
+* **YouTube**: `searchCount=11`, `error="YouTube: …"` —
+  **`/youtubei/v1/player` вернул HTTP 200, но `playabilityStatus` не `OK`**.
+
+Это прямое подтверждение требования «успешный поиск не означает поток».
+
+### 2.6 Дополнительные сетевые проверки провайдеров (мои собственные, read-only)
+
+Скрипты лежат в `%TEMP%\opencode`, вне репозитория.
+
+1. Скрейп `client_id` SoundCloud: главная возвращает **9** URL-ов ассетов,
+   `client_id` найден в `https://a-v2.sndcdn.com/assets/55-d39036ca.js`
+   (**2 910 777 байт**, 1 совпадение). Проверка 25 streamable-результатов `q=NCS`:
+   расхождений между протоколом в search-ответе и протоколом, выбранным в `resolve`, — **0**.
+2. YouTube Music `WEB_REMIX` search: найдено 27 `musicResponsiveListItemRenderer`,
+   у треков `flexColumns=3`, `col1.runs = ['Композиция', ' • ', 'Unknown Brain', ' и ', 'Chris Linton']`.
+3. LRCLIB: с тем `artist_name`, который отправляет приложение
+   (`"Композиция • Unknown Brain и Chris Linton"`) → **MISS (HTTP 503)**;
+   с чистым исполнителем (`"Unknown Brain и Chris Linton"`) → **HIT, syncedLyrics=true, 791 символ**.
+4. SoundCloud CloudFront-подпись: `expires` в query **≠** `DateLessThan.AWS:EpochTime`
+   в base64 `Policy` (подробности в дефекте 1).
+
+### 2.7 Проверка APK
+
+```
+aapt2 dump badging app-debug.apk
+  package: name='ru.nedotify.app' versionCode='1' versionName='0.1.0'
+           platformBuildVersionName='17' platformBuildVersionCode='37'
+           compileSdkVersion='37' compileSdkVersionCodename='17'
+  minSdkVersion:'26'   targetSdkVersion:'37'
+  uses-permission: INTERNET, ACCESS_NETWORK_STATE, WAKE_LOCK,
+                   FOREGROUND_SERVICE, FOREGROUND_SERVICE_MEDIA_PLAYBACK,
+                   READ_MEDIA_AUDIO,
+                   READ_EXTERNAL_STORAGE (maxSdkVersion=32),
+                   ru.nedotify.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+  → POST_NOTIFICATIONS ОТСУТСТВУЕТ
+```
+
+16 KB page alignment (требование API 35+/36+):
+```
+zipalign -c -P 16 -v 4 app-debug.apk   →  Verification successful
+  все 8 .so (arm64-v8a, armeabi-v7a, x86, x86_64) — OK
+```
+APK не устанавливался и не публиковался.
+
+### 2.8 Устройство недоступно — подтверждено
+
+```
+adb devices -l                      → (пусто, exit 0)
+emulator -accel-check               → "Android Emulator hypervisor driver is not installed", exit 6
+Get-CimInstance Win32_ComputerSystem → HypervisorPresent: False
+avdmanager create avd               → Error: "emulator" package must be installed!
+```
+Драйвер гипервизора не установлен, установка драйверов запрещена.
+`:app:connectedDebugAndroidTest` **не выполнялся**. Инструментальные тесты
+(`LibraryDatabaseTest`, `NavigationTest`) только собраны (`assembleDebugAndroidTest` — OK).
+
+---
+
+## 3. Текущие дефекты первого этапа
+
+### P1-1. TTL подписанного SoundCloud URL берётся не из того параметра — кэш отдаёт мёртвые ссылки ~2 часа
+
+**Файл:** `app/src/main/java/ru/nedotify/app/data/Sources.kt:46-49`
+(`streamExpiry`), применяется в `Sources.kt:92` и `Sources.kt:136`.
+
+```kotlin
+return (values["expire"]?:values["expires"])?.toLongOrNull()?.let { it*1000-60_000 }
+    ?: (now+15*60_000)
+```
+
+**Сценарий (воспроизведён на живых данных 2026-10-18).**
+Реальный URL, выданный `/media/.../stream/hls`:
+
+```
+https://playback.media-streaming.soundcloud.cloud/…/playlist.m3u8
+  ?expires=1792322643                (11:24 UTC)
+  &Policy=<base64, DateLessThan."AWS:EpochTime" = 1792315369>   (09:22 UTC)
+  &Signature=…&Key-Pair-Id=…
+```
+
+`streamExpiry` читает только `expires` и вычитает 60 с →
+кэш живёт до `1792322583` (11:23 UTC).
+CloudFront отвергнет подпись с `1792315369` (09:22 UTC).
+Окно, в котором `StreamCache` (ёмкость 128) отдаёт заведомо мёртвый URL: **7 214 с ≈ 120 минут**.
+Сравнение `expires` и `Policy.expires` (1 792 322 449) тоже различается — брать надо минимум.
+
+**Последствие.** Через ~2 ч работы приложения ранее разрешённые SoundCloud-треки
+начинают отдавать 403. Спасает только ограниченный одноразовый retry
+(`PlaybackService.kt:106-122`), но он тратит отдельный round-trip и даёт заметный
+stall, а `retryCount>=1` закрывает повтор. В очереди из нескольких треков подряд
+получится каскад пауз, а на повторном 403 — «мёртвая» ошибка без причины.
+
+**Исправление.** Разбирать `Policy` (URL-unescape → base64url с заменой `~` на `=`) и брать
+`min(expires, Statement[0].Condition.DateLessThan["AWS:EpochTime"]) * 1000 - 60_000`.
+Запас в 60 с применять и к ветке по умолчанию (`now+15 мин`), а не только к распознанному `expires`.
+Покрыть тестом `SoundCloud` URL с CloudFront `Policy`.
+
+---
+
+### P1-2. Метаданные YouTube: исполнитель включает тип записи, из-за чего ломается поиск текста
+
+**Файл:** `app/src/main/java/ru/nedotify/app/data/Sources.kt:113-118`
+
+```kotlin
+fun runs(index:Int)=columns.getOrNull(index)?…?.optJSONArray("runs")?.objects().orEmpty()
+    .joinToString("") { it.optString("text") }
+…
+source="youtube", sourceId=id, sourceUrl=…, coverUrl=…)
+→ artist = runs(1)
+```
+
+**Сценарий (воспроизведён).** Реальный ответ `music.youtube.com/youtubei/v1/search`:
+
+```
+item  videoId=HyBTAmBUCb4   flexColumns=3
+  col0 runs=['Superhero']
+  col1 runs=['Композиция', ' • ', 'Unknown Brain', ' и ', 'Chris Linton']
+```
+
+`runs(1)` склеивает всё → `Track.artist = "Композиция • Unknown Brain и Chris Linton"`.
+
+**Последствие.**
+1. В строке трека и мини-плеере подпись — мусор.
+2. `LyricsClient` (`Sources.kt:153-159`) отправляет в LRCLIB `artist_name` с этим мусором.
+   Проверено: **MISS (HTTP 503)**, тогда как с чистым исполнителем — **HIT, syncedLyrics=true**.
+   То есть функция текстов для YouTube Music систематически не работает.
+
+**Исправление.** Не склеивать весь второй столбец. Тип записи всегда в `runs[0]`,
+разделитель в `runs[1]`, исполнитель — всё начиная с `runs[2]`:
+
+```kotlin
+fun runs(index:Int)= … .joinToString(""){ it.optString("text") }
+val artistRuns = … .drop(2).joinToString(""){ it.optString("text") }
+```
+
+Проверить на альбомах/каналах: у них `flexColumns=2` и `videoId` отсутствует —
+они и сейчас отсекаются проверкой `id.matches(Regex("[A-Za-z0-9_-]{11}"))`, её сохранить.
+Добавить в `SourceContractTest` фиксту payload с `['Композиция',' • ','Artist']`.
+
+---
+
+### P2-3. `POST_NOTIFICATIONS` не объявлен и не запрашивается — медиауведомление скрыто на API 33+
+
+**Файлы:** `app/src/main/AndroidManifest.xml:3-9` (нет в списке uses-permission),
+`app/src/main/java/ru/nedotify/app/MainActivity.kt:41-46` (запроса нет).
+Подтверждено `aapt2 dump badging` по собранному APK.
+
+**Сценарий.** Android 13+ → установить APK, запустить воспроизведение.
+`startForeground` из Media3 проходит, но уведомление не показывается.
+
+**Последствие.** На API 33/34/35/36/37 нет постоянного UI воспроизведения в шторке:
+пользователь не видит текущий трек и не управляет им из уведомления; при сворачивании
+приложения единственный индикатор того, что музыка играет, пропадает.
+На API 26–32 дефекта нет, поэтому он не проявился на минимальной версии.
+
+**Исправление.** Добавить `<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>`,
+после первого успешного `play()` запросить через
+`ActivityResultContracts.RequestPermission()` (только при `SDK_INT>=33`) и
+`ContextCompat.checkSelfPermission`; `MediaSessionService` сам поднимет уведомление.
+
+---
+
+### P2-4. `completed` в истории никогда не выставляется при автопереходе
+
+**Файл:** `app/src/main/java/ru/nedotify/app/player/PlaybackService.kt:89-105`
+
+```kotlin
+override fun onMediaItemTransition(item:MediaItem?,reason:Int) {
+    recovery?.cancel()
+    if(sessionTrack!=item?.mediaId) {
+        flushListening(false)
+        sessionTrack=item?.mediaId; sessionId=UUID.randomUUID().toString()
+        startedAt=System.currentTimeMillis(); clock.reset(); completedSession=false
+        …
+    }
+}
+…
+override fun onPlaybackStateChanged(state:Int) { if(state==Player.STATE_ENDED)flushListening(true) }
+```
+
+**Сценарий.** Проиграть очередь из 3 треков с `repeatMode=OFF`.
+Для первого и второго ExoPlayer сначала вызывает `onMediaItemTransition(AUTO)`,
+и только потом (для последнего) `STATE_ENDED`. В момент `onMediaItemTransition`
+`sessionTrack` уже переключён на следующий трек, а для следующего `clock.reset()`
+обнулил `elapsedMs`, поэтому `flushListening(true)` упирается в
+`if(clock.elapsedMs<=0)return` (`PlaybackService.kt:166`) и выходит.
+
+**Последствие.** В таблице `history` флаг `completed` равен 1 **только у последнего
+трека очереди**. Статистика «дослушано» неверна для всей остальной музыки.
+Это прямо тот случай, о котором предупреждает `AGENTS.md`/PORTING_STATUS:
+длительность трека ≠ время прослушивания, и наоборот — корректность флага важна.
+
+**Исправление.** Обрабатывать завершение по позиции, а не по `STATE_ENDED`:
+в `onMediaItemTransition` при `reason==Player.MEDIA_ITEM_TRANSITION_REASON_AUTO`
+перед `flushListening(false)` проверять
+`player.playbackState==Player.STATE_ENDED || player.duration>0 && player.currentPosition>=player.duration-1_000`
+и вызывать `flushListening(true)`. Либо добавить `onPositionDiscontinuity`
+с флагом автоперехода и завершать сессию в `onMediaItemTransition` до смены `sessionTrack`.
+
+---
+
+### P2-5. Один неразрешимый трек срывает постановку всей очереди
+
+**Файл:** `app/src/main/java/ru/nedotify/app/player/PlaybackService.kt:73-87`
+
+```kotlin
+val resolved=coroutineScope { items.map { item -> async { limit.withPermit { resolveItem(item) } } }.awaitAll() }
+```
+
+`awaitAll()` бросает первую ошибку и отменяет остальных. `resolveItem`
+(`PlaybackService.kt:157`) бросает `SourceFailure("Трек отсутствует в библиотеке")`.
+
+**Сценарий.** `MusicViewModel.play` (`MusicViewModel.kt:79`) сначала вызывает
+`items.forEach { repository.remember(it) }`, поэтому путь из UI защищён.
+Но: после `remember` трек может исчезнуть (очистка данных/БД, миграция),
+либо `dao.track()` может вернуть null при `INSERT OR REPLACE`-гонке с `scanLocal`
+(`LibraryRepository.kt:46-59` пишет `local:<id>` и не трогает существующие строки,
+но при параллельном процессе возможна гонка). Также путь через восстановление:
+`restore` (`PlaybackService.kt:131-135`) ошибки гасит построчно, а `onAddMediaItems` — нет.
+
+**Последствие.** Вместо того чтобы начать с доступных треков, пользователь получает
+ничего: `MediaController.setMediaItems` возвращает ошибку, `play()`
+(`MusicViewModel.kt:82`) показывает «Не удалось начать воспроизведение».
+Воспроизведение не начинается вообще.
+
+**Исправление.** Разрешать поэлементно с сохранением успешных результатов:
+
+```kotlin
+val resolved=items.mapNotNull { item ->
+    runCatching { limit.withPermit { resolveItem(item) } }.getOrNull()
+}
+if(resolved.isEmpty()) future.setException(SourceFailure("Нет доступных треков в очереди"))
+else future.set(resolved.toMutableList())
+```
+
+Соответствующий построчный `try/catch` уже есть в `restore` — поведение должно совпадать.
+
+---
+
+### P2-6. `onAddMediaItems` создаёт по корутине на каждый элемент очереди до старта воспроизведения
+
+**Файл:** `app/src/main/java/ru/nedotify/app/player/PlaybackService.kt:79-80`
+(вызывается из `MusicViewModel.kt:79`, список берётся в
+`MusicApp.kt:166` / `MusicApp.kt:220` / `MusicApp.kt:189`).
+
+```kotlin
+val limit=Semaphore(3)
+val resolved=coroutineScope { items.map { item -> async { limit.withPermit { resolveItem(item) } } }.awaitAll() }
+```
+
+`Semaphore` ограничивает одновременное **исполнение**, но `items.map { async { … } }`
+создаёт все N корутин сразу. Каждая — точечный `SELECT * FROM tracks WHERE id=?`
+(`Models.kt:41`).
+
+**Сценарий.** Импортировать 3 000 треков через SAF, затем нажать на любой.
+`LibraryScreen` (`MusicApp.kt:220`) передаёт в очередь весь видимый список.
+
+**Последствие.** 3 000 корутин + 3 000 точечных SQLite-запросов + 3 000 возвратов
+в главный поток (`scope = Dispatchers.Main.immediate`, `PlaybackService.kt:33`)
+**до** начала воспроизведения. Пользователь видит многосекундную задержку
+на каждый запуск, тем дольше, чем больше библиотека.
+Формально URL потоков не запрашиваются (требование `AGENTS.md` соблюдено),
+но блокировка старта остаётся.
+
+**Исправление.** Добавить пакетную выборку в DAO:
+
+```kotlin
+@Query("SELECT * FROM tracks WHERE id IN (:ids)") suspend fun tracks(ids: List<String>): List<Track>
+```
+
+и построить `Map<String,Track>` одним запросом, либо разрешать только текущий элемент
+на старте, а остальные отдавать уже разрешёнными/локальными заглушками, доставляемыми
+через `MediaItem` без обращения к БД.
+
+---
+
+### P2-7. Резолвер URL блокирует поток загрузчика Media3 на всё время сетевого запроса
+
+**Файл:** `app/src/main/java/ru/nedotify/app/player/PlaybackService.kt:52-57`
+
+```kotlin
+val resolving=ResolvingDataSource.Factory(upstream) { spec ->
+    if(spec.uri.scheme!="nedotify")spec else runBlocking(Dispatchers.IO) {
+        val track=repository.dao.track(…) ?: throw SourceFailure(…)
+        spec.withUri(Uri.parse(repository.resolve(track).url))
+    }
+}
+```
+
+`ResolvingDataSource.Resolver` по контракту синхронный, и Media3 вызывает его
+на своём пуле загрузки размером `min(4, max(1, cpu/2))`. Внутри — до двух сетевых
+запросов (см. трассу пробы: `/tracks/<id>` + `/media/.../stream/hls`) с
+`callTimeout=30s` (`Sources.kt:22`), а в пути восстановления client_id — до 9 запросов
+(дефект 8).
+
+**Последствие.** При сетевых проблемах до четырёх потоков загрузки Media3
+одновременно блокируются в `runBlocking`; загрузка аудио полностью встаёт
+до 30 с и дольше. Именно это превращает дефект 8 в пользовательский stall.
+
+**Исправление.** Не блокировать путь загрузки: разрешать URL заранее в
+`resolverScope` (или отдельной корутине на `Dispatchers.IO` c кэшированием
+по `spec.key`), а в резолвере отдавать уже готовый URL; если URL ещё не готов —
+ждать `CompletableFuture` с таймаутом, а не весь OkHttp-вызов.
+Альтернатива: вынести разрешение в `onAddMediaItems` для текущего элемента
+и хранить `nedotify:`-URI с быстрым кэшем, исключив сеть из критического пути.
+
+---
+
+### P2-8. `SoundCloudClient.id()` держит `Mutex` во время сети и тянет 2.9 МБ бандл
+
+**Файл:** `app/src/main/java/ru/nedotify/app/data/Sources.kt:54-64`
+
+```kotlin
+private suspend fun id():String=lock.withLock {
+    clientId?.let { return@withLock it }
+    val html=network.get("https://soundcloud.com/")
+    val scripts=Regex("https://a-v2\\.sndcdn\\.com/assets/[^\"' ]+\\.js").findAll(html)
+        .map{it.value}.toList().takeLast(8).reversed()
+    for(url in scripts){ val body=network.get(url); … }
+}
+```
+
+Подтверждено трассой пробы: главная отдаёт 9 ссылок на ассеты, берётся
+`55-d39036ca.js` размером **2 910 777 байт**, `clientIdMatches=1`.
+
+**Сценарий.** Два разных трека из очереди разрешаются одновременно, client_id ещё не найден.
+Первый занимает `lock` на всё время: 1 + N запросов, каждый с `callTimeout=30s`.
+Второй ждёт. Тот же мьютекс нужен в `api()` при 401/403:
+`catch(error:SourceFailure){ if(…403…) lock.withLock { clientId=null } else throw error }`
+(`Sources.kt:70`) — то есть и повторная попытка застрянет в той же очереди.
+
+**Последствие.** Холостой обход до 9 последовательных HTTP-запросов (и до ~2.9 МБ
+трафика на каждом холодном старте), все параллельные обращения к SoundCloud
+сериализованы. В сочетании с P2-7 пользователь видит полную остановку воспроизведения.
+Хрупкость самого скрейпа (зависимость от HTML главной и содержимого бандла)
+подтверждена тем, что он вообще работает: это единственный способ получить client_id.
+
+**Исправление.**
+1. Single-flight вместо удержания мьютекса: `private var pending: Deferred<String>?`,
+   `lock` брать только для чтения/записи поля, а сетевой вызов — вне мьютекса
+   (`CompletableDeferred<Deferred<String>>`).
+2. Не качать весь бандл: сначала взять маленький `main`/runtime-чанк
+   (`Range: bytes=0-2000000`) либо искать `client_id` по всему набору ссылок
+   параллельно с ограничением в 3.
+3. Ограничить попытки 3 вместо 8 и добавить понятное сообщение сразу,
+   не дожидаясь всех запросов.
+
+---
+
+### P2-9. Пересборка полного состояния плеера каждые 500 мс + O(n²) в списке очереди
+
+**Файлы:**
+`app/src/main/java/ru/nedotify/app/ui/MusicViewModel.kt:51` и `:53-60`,
+`app/src/main/java/ru/nedotify/app/ui/MusicApp.kt:61-62`, `:121`, `:322-325`.
+
+```kotlin
+viewModelScope.launch { while(isActive) { delay(500); controller?.let(::update) } }
+…
+(0 until player.mediaItemCount).map { player.getMediaItemAt(it).let { m->m.mediaId to m.mediaMetadata.title.toString() } }
+```
+
+`update()` создаёт новый `NowPlaying` с **новым** `queue` (список пар) каждые 500 мс
+и на каждом `onEvents`. Дальше:
+* `MiniPlayer`: `tracks.firstOrNull { it.id==now.id }` — O(n) по всей библиотеке;
+* `TrackRow` (`MusicApp.kt:116`): каждый ряд подписан на `model.playback`,
+  поэтому пересобираются **все N** рядов списка;
+* вкладка «Очередь»: `now.queue.indexOfFirst { it.first==now.id }` **внутри** `itemsIndexed`
+  → O(n²) на каждый кадр.
+
+**Сценарий.** Библиотека 2 000 треков, открыта вкладка «Библиотека», играет музыка.
+Каждые 500 мс пересобираются 2 000 рядов и список очереди; при 500 треках в очереди
+вкладка «Очередь» делает 250 000 сравнений каждые 500 мс.
+
+**Последствие.** Стабильный расход CPU и батареи, микрофризы при прокрутке.
+Воспроизведение не ломается, но это самая заметная проблема качества на реальном
+устройстве — и она тем заметнее, чем больше библиотека.
+
+**Исправление.**
+1. Отделить «дорогие» поля от позиции: `NowPlaying` разделить на
+   `NowPlayingMeta` (обновляется по событиям) и `positionMs` (отдельный поток
+   с `snapshotFlow { player.currentPosition }`, обновлять раз в 1 с и только при `isPlaying`).
+2. Передавать очередь один раз как `SnapshotStateList<QueueEntry>`, а не пересобирать
+   список строк в каждом `update`.
+3. `activeIndex` хранить числом в `NowPlaying`, убрать `indexOfFirst` из `itemsIndexed`.
+4. `favorite` брать из `Map<String,Boolean>` id→favorite, а не `firstOrNull` по всему списку.
+
+---
+
+### P2-10. `PlaybackService` экспортирован без разрешения (подтверждено lint)
+
+**Файл:** `app/src/main/AndroidManifest.xml:19-20`
+
+```xml
+<service android:name=".player.PlaybackService" android:exported="true" …>
+```
+
+Lint: `ExportedService` — «Exported service does not require permission»,
+`AndroidManifest.xml:19`, Warning.
+
+**Сценарий.** Любое приложение на устройстве может
+`bindService(Intent("androidx.media3.session.MediaSessionService", …).setComponent(…))`.
+
+**Последствие.** Частично закрыто проверкой в `PlaybackService.kt:68-72`
+(`controller.packageName==packageName || controller.isTrusted` → `MediaSession.ConnectionResult.reject()`),
+поэтому команды неподтверждённых контроллеров не исполняются. Но сам сервис
+создаётся, `onCreate` поднимает ExoPlayer, `SimpleCache` (256 МБ) и
+`StandaloneDatabaseProvider`, а `onGetSession` отдаёт сессию наружу.
+Это DoS-поверхность и лишняя работа без разрешения пользователя.
+
+**Исправление.** Вариант А (рекомендуется, как в примерах Media3):
+`android:exported="true"` оставить, но добавить
+`<permission android:name="ru.nedotify.app.permission.MEDIA_CONTROL" android:protectionLevel="signature"/>`
+и `android:permission=…` на сервисе — системные контроллеры (Android Auto, Ассистент,
+Bluetooth) при этом сохраняются. Вариант Б: `android:exported="false"`,
+если системная интеграция не нужна на этом этапе.
+
+---
+
+### P2-11. Пользователю не показывается реальная причина отказа воспроизведения
+
+**Файл:** `app/src/main/java/ru/nedotify/app/ui/MusicViewModel.kt:43`
+
+```kotlin
+override fun onPlayerError(error:PlaybackException) {
+    message.value="Не удалось воспроизвести трек. Проверьте сеть или выберите другой источник"
+}
+```
+
+**Сценарий.** Воспроизвести трек YouTube Music. По живой пробе 2026-10-18
+`/youtubei/v1/player` отвечает HTTP 200, но `playabilityStatus` = не `OK`
+(«войти»/логин). `InnerTubeClient.resolve` (`Sources.kt:131`) корректно бросает
+`SourceFailure("YouTube: …")` — «фиктивного playable URL» нет, как и заявлено в PORTING_STATUS.
+
+**Последствие.** Пользователь видит «Проверьте сеть», хотя сеть есть, а нужна авторизация.
+Формулировка прямо противоречит факту и отправляет пользователя не туда.
+Данный слой делает правильно (это надо сохранить), теряется только в UI.
+
+**Исправление.** Извлекать причину из цепочки исключений Media3
+(`PlaybackException.errorCodeName`, а для `SourceFailure` — своё сообщение,
+пробросить его через `Result` в `onPlayerError`), например:
+
+```kotlin
+val reason=generateSequence<Throwable>(error){it.cause}
+    .mapNotNull{ (it as? SourceFailure)?.message }.firstOrNull()
+message.value = reason ?: "Не удалось воспроизвести трек. …"
+```
+
+Отдельно развести тексты «нет сети» / «истёкшая ссылка, повтор не помог» /
+«источник требует вход в аккаунт» — иначе ограниченный retry (дефект 1)
+не объясним пользователю.
+
+---
+
+### P2-12. `SimpleCache` (256 МБ) создаётся на главном потоке в `Service.onCreate`
+
+**Файл:** `app/src/main/java/ru/nedotify/app/player/PlaybackService.kt:47-49`
+
+```kotlin
+override fun onCreate() {
+    super.onCreate()
+    cache=SimpleCache(File(cacheDir,"audio"),LeastRecentlyUsedCacheEvictor(256L*1024*1024),StandaloneDatabaseProvider(this))
+```
+
+Конструктор `SimpleCache` синхронно сканирует каталог кэша, читает индексную БД
+и вызывает evictor — это дисковый I/O в главном потоке при старте сервиса.
+Сервис поднимается при каждом `MediaController` bind
+(`MusicViewModel.kt:40`), то есть при каждом запуске приложения.
+
+**Последствие.** Чем полнее кэш (декларировано 256 МБ), тем дольше холодный старт
+и тем выше риск ANR. Сценарий: полностью прогнанный SoundCloud-HLS плейлист,
+затем перезапуск процесса на медленном eMMC.
+
+**Исправление.** Инициализировать `SimpleCache` заранее в
+`NeDotifyApplication.onCreate` в фоновой корутине (`suspendCancellableCoroutine`
+на `initialize()`), а в сервисе использовать уже готовый экземпляр через `lazy`,
+либо `SingleCacheProvider` с `onTrimMemory` (см. рекомендации Media3).
+
+---
+
+### P2-13. После окончания очереди БД и DataStore пишутся каждые 5 с бесконечно
+
+**Файлы:** `player/PlaybackService.kt:147-154`, `:163-170`, `:171-179`
+
+```kotlin
+while(isActive){ delay(1000); clock.tick(); if(++ticks%5==0){ flushListening(false); checkpointQueue() } }
+```
+
+`flushListening` выходит только при `clock.elapsedMs<=0`. После `STATE_ENDED`
+`clock.playing(false)` уже вызван, `elapsedMs` сохраняет последнее ненулевое
+значение — значит, `putSession` (транзакция Room) продолжает выполняться
+каждые 5 с. `checkpointQueue` → `Preferences.saveQueue` → `store.edit {}` →
+DataStore перезаписывает файл настроек, тоже каждые 5 с.
+
+**Сценарий.** Очередь из 3 треков доиграла, экран закрыт, сервис жив
+(`onTaskRemoved` при паузе вызывает `stopSelf()`, но пока контроллер подключён —
+сервис живёт). Наблюдение: 12 транзакций БД и 12 перезаписей файла DataStore
+в минуту, бесконечно, без изменения состояния.
+
+**Последствие.** Лишняя запись в SQLite (WAL растёт, чекпоинты) и в файл
+настроек при полностью неподвижном плеере. Расход батареи, нагрузка на ввод-вывод.
+
+**Исправление.** Сбрасывать флаги dirty:
+
+```kotlin
+private var historyDirty=false
+private var queueDirty=false
+```
+ставить их в `flushListening`/`checkpointQueue` перед записью и запускать запись
+только из тикера, если флаг выставлен; сбрасывать после успешной записи.
+
+---
+
+### P2-14. `verify.ps1` перезаписывает `local.properties` и не восстанавливает его
+
+**Файл:** `verify.ps1:43`, `finally` на строках 57-59
+
+```powershell
+[IO.File]::WriteAllText("$PSScriptRoot/local.properties", "sdk.dir=$sdkAlias`n", [Text.Encoding]::ASCII)
+…
+finally { foreach ($key in $saved.Keys) { [Environment]::SetEnvironmentVariable($key, $saved[$key], 'Process') } }
+```
+
+В `finally` восстанавливаются только переменные окружения процесса. Содержимое
+`local.properties` после запуска скрипта остаётся указывающим на временный junction
+(`C\:/Temp/nedotify-B3544D227D/sdk`). Сейчас в репозитории именно так и есть —
+то есть исходный реальный путь SDK уже заменён на временный.
+
+**Последствие.** README предлагает «в обычном окружении с настроенными SDK/JDK
+и ASCII-путями» запускать `./gradlew` напрямую. После `verify.ps1` и удаления
+временной папки прямая сборка падает с «SDK location not found», и причина
+неочевидна. Плюс это запись в дерево исходников — противоречит собственной
+инструкции README («не перемещает исходники», «сохраняет только локальный
+`local.properties`» — формулировка двусмысленна).
+
+**Исправление.** Сохранять исходное содержимое в переменную до записи и
+восстанавливать в `finally` (или вообще не трогать файл, а передавать
+`-Dsdk.dir=…`/`ANDROID_HOME` через окружение).
+
+---
+
+### P3-15. `verify.ps1` способен завершиться кодом 0 при неудаче
+
+**Файл:** `verify.ps1:60` → `exit $buildExit`
+
+`$buildExit` инициализируется только на строке 55. Если `gradlew.bat` не найден
+или не запускается, скрипт падает раньше, `$buildExit` остаётся `$null`,
+и `exit $null` даёт **код 0** — ложный успех в CI.
+
+**Исправление.** `if (-not (Test-Path ...))` до вызова; инициализировать
+`$buildExit = 1` до `try`, записывать `$LASTEXITCODE` в `finally`.
+
+---
+
+### P3-16. `JAVA_TOOL_OPTIONS` получает ведущий пробел, если переменная не была задана
+
+**Файл:** `verify.ps1:49`
+
+```powershell
+$env:JAVA_TOOL_OPTIONS = "$($saved['JAVA_TOOL_OPTIONS']) -Djava.io.tmpdir=$tempRoot"
+```
+
+При `$saved['JAVA_TOOL_OPTIONS'] = $null` получается `" -Djava.io.tmpdir=…"`;
+Gradle печатает предупреждение (видно в выводе сборки: `Picked up JAVA_TOOL_OPTIONS`).
+**Исправление:** `[string]::Join(' ', @($saved['JAVA_TOOL_OPTIONS'], "-Djava.io.tmpdir=$tempRoot") | Where-Object { $_ })`.
+
+---
+
+### P3-17. Восстановление дважды перемешивает очередь
+
+**Файл:** `player/PlaybackService.kt:137-142`
+
+```kotlin
+val index=items.indexOfFirst { it.mediaId==savedId }.coerceAtLeast(0)
+player.setMediaItems(items,index,json.optLong("position").coerceAtLeast(0))
+player.repeatMode=json.optInt("repeat").coerceIn(0,2)
+player.shuffleModeEnabled=json.optBoolean("shuffle")
+```
+
+`ids` сохраняется в уже перемешанном порядке (`checkpointQueue` обходит
+`getMediaItemAt(i)` в текущем, перемешанном порядке). После восстановления
+включается `shuffleModeEnabled`, и Media3 перемешивает этот список ещё раз.
+Текущий трек при этом корректен (Media3 сохраняет текущий элемент при включении
+shuffle), но **порядок очереди после перезапуска не тот, что был перед ним**.
+
+**Последствие.** У пользователя «прыгает» очередь при перезапуске приложения.
+
+**Исправление.** Сохранять исходный порядок (`player.getMediaItems()` до
+перемешивания не даёт — хранить `originalIndex`/`shuffleSeed` в чекпоинте)
+либо восстанавливать флаг shuffle и полагаться на исходный порядок:
+при `shuffle==true` сохранять `ids` в порядке `timeline` до применения
+`ShuffledOrder` (например, `player.mediaMetadata.indexOfFirst…`/запросить
+`MediaController` повторить seed), иначе — сохранять `shuffle=false` в чекпоинте
+и перемешивать только в рантайме.
+
+---
+
+### P3-18. Быстрое переключение треков может оставить очередь без `prepare()`
+
+**Файл:** `app/src/main/java/ru/nedotify/app/ui/MusicViewModel.kt:72-84`
+
+```kotlin
+playJob?.cancel()
+playJob=viewModelScope.launch {
+    val player=controller?:throw SourceFailure("Плеер подключается. Повторите действие")
+    …
+    player.setMediaItems(items.map { MediaItem.Builder().setMediaId(it.id).build() }, …, 0)
+    player.prepare();player.play()
+}
+```
+
+Отмена предыдущей `playJob` между `setMediaItems` и `prepare()` синхронно
+прервать не может (`MediaController.setMediaItems` возвращает немедленно,
+отмена сработает только на ближайшем suspend-точке), но если отмена попадёт
+на `items.forEach { repository.remember(it) }` следующего вызова — предыдущий
+`setMediaItems` уже ушёл в сервис, а `prepare/play` могут не выполниться.
+Результат самовосстанавливается следующим вызовом, но между ними плеер в
+`STATE_IDLE` и мини-плеер может показать неготовый трек.
+
+**Исправление.** Сериализовать через `Mutex`/`Channel` в VM вместо `Job.cancel()`,
+либо после `setMediaItems` явно проверять `player.playbackState==STATE_IDLE` и досылать `prepare()`.
+
+---
+
+### P3-19. Локальный поиск читает всю таблицу треков
+
+**Файл:** `app/src/main/java/ru/nedotify/app/data/LibraryRepository.kt:27`
+
+```kotlin
+if(source=="local")return dao.allTracks().filter { it.localUri.isNotBlank() && (it.title.contains(query,true)||it.artist.contains(query,true)) }
+```
+
+Каждый ввод буквы в режиме «На устройстве» грузит все строки и фильтрует в памяти.
+**Исправление.** Добавить `@Query("… WHERE localUri!='' AND (title LIKE :q OR artist LIKE :q) LIMIT 50")`.
+
+---
+
+### P3-20. Форматирование времени использует локаль по умолчанию
+
+**Файл:** `app/src/main/java/ru/nedotify/app/ui/Design.kt:95`
+
+```kotlin
+fun clock(ms:Long):String = "%d:%02d".format(ms.coerceAtLeast(0)/60_000,ms.coerceAtLeast(0)/1000%60)
+```
+
+В локалях с нелатинскими цифрами (`ar`, `fa`, `hi-IN-u-nu-deva`) `String.format`
+подставит `٣:٠٧`. **Исправление.** `Locale.ROOT`:
+`"%d:%02d".format(Locale.ROOT, minutes, seconds)`.
+
+---
+
+### P3-21. Устаревший `Icons.Outlined.QueueMusic` ломает RTL
+
+**Файлы:** `app/src/main/java/ru/nedotify/app/ui/MusicApp.kt:213`, `:279`.
+Предупреждение компилятора: «Use the AutoMirrored version at
+`Icons.AutoMirrored.Outlined.QueueMusic`». Манифест объявляет `android:supportsRtl="true"`.
+**Исправление.** Заменить на `Icons.AutoMirrored.Outlined.QueueMusic`.
+
+---
+
+### P3-22. `ResolvedStream.mimeType` нигде не используется; тип источника фиксируется при импорте
+
+**Файлы:** `data/Models.kt:36` (поле), `data/Sources.kt:92,136` (заполняется),
+`player/PlaybackService.kt:159` (не читается).
+
+```kotlin
+.setMimeType(track.mimeType.takeIf { it.isNotBlank() })   // из БД, задан при search/import
+```
+
+Тип источника Media3 фиксируется в `MediaItem` **до** того, как
+`ResolvingDataSource` вообще вызовет `resolve()`. Фактический протокол,
+выбранный `resolve()`, в `MediaItem` не попадает: `ResolvedStream.mimeType` —
+мёртвые данные. Если на момент `resolve()` протокол окажется другим,
+`ProgressiveMediaSource` получит `.m3u8` (в `DefaultExtractorsFactory` нет
+m3u8-экстрактора) и воспроизведение упадёт с `UnrecognizedInputFormatException`;
+одна ограниченная попытка повтора даст тот же результат.
+
+**Статус: НЕ ПОДТВЕРЖДЕНО как дефект.** Проверено на живых данных 2026-10-18:
+для всех 25 streamable-результатов `q=NCS` протокол в search-ответе совпал
+с протоколом, выбранным в `resolve` (расхождений 0); в частности трек
+554484609 — `hls` и в search, и в resolve.
+
+**Рекомендация (страховка, а не исправление подтверждённого бага).**
+Согласовывать тип источника с фактическим: в `resolveItem` не задавать
+`mimeType` из БД, а полагаться на сниффинг; либо добавить в
+`ResolvingDataSource`/`DataSpec` проверку расширения и принудительно
+переиграть через `ProgressiveMediaSource`/`HlsMediaSource`;
+либо писать `mimeType` в БД при каждом `resolve()` (грязная запись, нежелательно).
+
+---
+
+### P3-23. Нет `android:dataExtractionRules` (lint `DataExtractionRules`)
+
+**Файл:** `app/src/main/AndroidManifest.xml:12`. `allowBackup="false"` есть,
+но с Android 12 атрибут применим только к облачному бэкапу; для device-to-device
+нужен `@xml/data_extraction_rules`. В приложении с пользовательской библиотекой
+и измеренной историей это стоит закрыть явно.
+**Исправление.** Добавить `res/xml/data_extraction_rules.xml` с
+`<cloud-backup><exclude domain="root" path="."/></cloud-backup>` и
+`<device-transfer><exclude …/></device-transfer>`.
+
+---
+
+### P3-24. Остаток предупреждений компилятора/линта
+
+* `Sources.kt:27` — имя параметра `onFailure(… , e:IOException)` не совпадает с
+  супертипом (`e`); ломается вызов по именованному аргументу при смене OkHttp.
+* `PlaybackService.kt:70` — `MediaSession.ConnectionResult.AcceptedResultBuilder`
+  помечен deprecated в Media3 1.11.1.
+* `PlaybackService.kt:55` — `Uri.parse` → `String.toUri` (KTX).
+* `LiveProviderProbeTest.kt:60` — вызов `mkdirs()` на nullable `File?`
+  без `?.`/`!!` (предупреждение компилятора; при `probe==null` NPE в отчёте).
+* 12 предупреждений о более новых версиях зависимостей (AGP 9.8.1,
+  lifecycle 2.11.0, core-ktx 1.19.1, coroutines 1.11.0, okhttp 5.5.0,
+  coil 3.6.3, haze 2.0.1, org.json 20260814).
+
+---
+
+## 4. Что проверено и работает (чтобы не выглядело хуже, чем есть)
+
+* **Single-flight и TTL кэша потоков** — `StreamCache` (`data/StreamCache.kt`)
+  реализован корректно и покрыт тестами: отмена одного ожидающего не убивает
+  общий `Deferred`; ошибка не залипает в `inflight` (запись снимается в `finally`
+  под `NonCancellable`); истёкшая запись и `invalidate()` приводят к новому
+  разрешению. Дефектов здесь не найдено.
+* **Non-local `return` из `lock.withLock`** в `StreamCache.kt:17` корректен
+  (`withLock` — `suspend inline`, `finally` разблокирует мьютекс).
+* **Дедупликация разрешений клиента SoundCloud** (`Sources.kt:67`) — `id()`
+  вызывается один раз на попытку; повтор после 401/403 ровно один
+  (`repeat(2)` + `attempt==0`), как и заявлено в README.
+* **Ретрай ограничен одной попыткой на трек** (`PlaybackService.kt:106-122`):
+  `retryCount` сбрасывается только при смене трека; проверка
+  `player.currentMediaItem?.mediaId==id && player.currentMediaItemIndex==index`
+  не даёт перескочить на другой трек при ошибке префетча.
+* **Отмена запросов действительно работает**: `MusicNetwork.request` регистрирует
+  `continuation.invokeOnCancellation { call.cancel() }` (`Sources.kt:25`), поэтому
+  отмена `searchJob`/`lyricsJob`/`playJob` и `streams.cancelAll()` реально
+  прерывают сокеты.
+* **Роли и внешние контроллеры**: `onConnect` отклоняет недоверенные пакеты;
+  `sessionActivity` — `FLAG_IMMUTABLE | FLAG_UPDATE_CURRENT`.
+* **Помеченные «не воспроизведено» обрабатываются честно**: `Item → URL == null`
+  → `optString` даёт `""` → `startsWith("https://")` ложно →
+  `SourceFailure("Источник не предоставил безопасный поток")`; литеральная строка
+  `"null"` в `artwork_url`/`syncedLyrics`/`plainLyrics` отфильтрована
+  (`.takeUnless { it=="null" }`); `playabilityStatus != "OK"` → явная ошибка,
+  а не фиктивный URL. Подтверждено тестом и живой пробой.
+* **URL трека не обходятся для всей очереди перед стартом** — требование
+  `AGENTS.md` соблюдено: `MediaItem` создаётся с `nedotify://track/<id>`,
+  реальный URL получается на загрузчике Media3. (Цена — P2-6 и P2-7.)
+* **Ключ кэша аудио — фактический CDN-URL**, а не `nedotify://`, потому что
+  `ResolvingDataSource` подменяет `DataSpec` до `CacheDataSource`. Смешивания
+  HLS-манифеста и аудио в одном ключе нет. Проверено по коду Media3 и по трассе пробы.
+* **Восстановление очереди корректно по позиции** (`player.setMediaItems(items,index,position)`),
+  при ошибках строки не теряются (`PlaybackService.kt:131-135`), после рестарта
+  ставится на паузу — как и заявлено в README.
+* **Ретранзакция истории** `putSession = insertSession + advanceSession`
+  с `MAX(listenedMs,:listenedMs)` в `@Transaction` — корректный и гонко-безопасный
+  апсерт; покрыт `LibraryDatabaseTest`.
+* **`ListeningClock`** монотонна (`SystemClock::elapsedRealtime`),
+  исключает буферизацию, паузу и перемотку; проверена тестом.
+* **16 KB page alignment** — `zipalign -c -P 16` проходит для всех `.so`.
+* **Минимальный API 26**: `java.time.LocalTime` (`ui/MusicApp.kt:144`) требует
+  ровно API 26 — граница выдержана; `MediaStore.Audio.Media.IS_MUSIC` доступен
+  с API 1; `ActivityResultContracts.OpenMultipleDocuments` — SAF без разрешения;
+  Haze защищён `SDK_INT>=31` (`ui/Design.kt:49`), `READ_MEDIA_AUDIO` —
+  `SDK_INT>=33` (`MainActivity.kt:45`); SQL использует только `MAX/COALESCE/GROUP BY`,
+  доступные в SQLite 3.18 (Android 8). `foregroundServiceType` (API 29+) на 26–28
+  корректно игнорируется. Манифест-слияние прошло без конфликтов `minSdk`,
+  все библиотеки совместимы с 26.
+
+---
+
+## 5. API 26 и API 37 — отдельно
+
+**API 26 (minSdk).** Статически дефектов уровня «не запустится» не найдено.
+Найденное поведение на 26–32: FGS без типа (атрибут API 29+ игнорируется) —
+работает; `POST_NOTIFICATIONS` не существует — дефекта P2-3 на этой версии нет;
+`java.time` доступен ровно с 26. Инструментально не проверено — устройства нет.
+
+**API 37 (target/compile, Android 17).**
+Подтверждено инструментально: `compileSdkVersion=37`, `targetSdkVersion=37`,
+`platformBuildVersionName='17'` (из APK). Сборка и линт проходят под SDK 37.
+
+**Не проверено и не утверждается:** поведение на реальном устройстве/эмуляторе
+API 37 — foreground-service/media-session поведение, декодирование,
+перемотка, HLS-воспроизведение, возобновление после перезагрузки процесса.
+Для этого нужен либо физический телефон, либо работающий эмулятор;
+см. раздел 2.8 — ни то, ни другое на этой машине недоступно
+(драйвер гипервизора не установлен, его установка запрещена).
+Любые утверждения о поведении API 37 без устройства были бы догадкой,
+поэтому их в отчёте нет.
+
+---
+
+## 6. Функции следующих этапов (НЕ дефекты)
+
+Перечислены в `PORTING_STATUS.md:82-85` и строке 40 как явно нереализованные.
+Проверка их отсутствия в коде подтверждает честность статуса:
+
+загрузки/возобновление (кэш 256 МБ — **не** офлайн-загрузки, это верно
+и отдельно оговорено в README:46), резервный JSON-перенос, эквалайзер,
+crossfade (в `PORTING_STATUS` указано «ещё не реализован» — кода нет),
+Flow/рекомендации/smart_playlists, авторизация (YouTube требует входа —
+подтверждено пробой), Spotify/Яндекс, полный каскад текстов (LRCLIB → NetEase/Genius),
+отчёты/сравнение периодов.
+
+Отдельно: `androidx.media3:media3-session` даёт системные команды, но
+кастомных команд (`SessionCommand`) в проекте нет — Android Auto/Bluetooth/Wear
+не прорабатывались. Считать это дефектом нельзя — этап не заявлен.
+
+---
+
+## 7. Осталось непроверенным
+
+1. **Реальное воспроизведение звука на Android** — декодирование, перемотка,
+   HLS-воспроизведение, gapless. Требует устройства.
+2. **Фоновый сервис в реальных условиях**: выключенный экран, doze,
+   kills процесса системой, `START_STICKY`-перезапуск, сверчение приложения
+   из шторки, Bluetooth/гарнитура, `AUDIOFOCUS_LOSS`, becoming-noisy.
+3. **`connectedDebugAndroidTest`**: `LibraryDatabaseTest`
+   (favourite, порядок плейлиста, измеренная история) и `NavigationTest`
+   (навигация, смена темы) собраны, но не выполнены.
+4. **Скриншоты и сравнение с `design/reference.png`.**
+   Статически сверено: сине-чёрная палитра (`ui/Design.kt:26-27`), голубой акцент,
+   три нижние вкладки (`ui/MusicApp.kt:64`), мини-плеер над навигацией (`:61-68`),
+   стеклянные панели через Haze (`:46-55`), шрифт с кириллицей (`:38-42`).
+   Не сходится с референсом: в референсе на главной есть чипы
+   «Все/Плейлисты/Артисты/Альбомы» и чипы жанров, в поиске — кнопка микрофона
+   и категории «Треки/Исполнители/Альбомы/Плейлисты», на профиле — разделы
+   «Быстрый доступ» и «Аккаунт и приложение», в настройках — «Плеер», «Звук»,
+   «Хранилище». Это следующий этап (PORTING_STATUS, этап 4), не дефект.
+   Фактическая отрисовка на устройстве не проверена.
+5. **Устойчивость скрейпа `client_id` SoundCloud.** Проверено только на текущем
+   состоянии сайта (2026-10-18, бандл `55-d39036ca.js`). Как поведёт себя при
+   изменении HTML/бандла, не проверялось.
+6. **Поведение при `403`/`429` от CDN в середине трека** — не проверено;
+   статически retry ограничен одной попыткой и после неё ошибка показывается.
+7. **Проверка `merged manifest` сторонних библиотек на API 37 в рантайме** —
+   только статически (слияние прошло, `FOREGROUND_SERVICE_MEDIA_PLAYBACK` объявлен).
+8. **Миграции БД**: версия 1, `fallbackToDestructiveMigration` не задан.
+   На текущей версии дефекта нет, первая миграция потребует явного `Migration`.
+
+---
+
+## 8. Сводка приоритетов
+
+| P | Кол-во | Дефекты |
+|---|---|---|
+| P0 | **0** | — |
+| P1 | 2 | TTL подписанного SoundCloud URL; метаданные YouTube/исполнитель |
+| P2 | 13 | POST_NOTIFICATIONS; `completed` при автопереходе; `awaitAll` срывает очередь; N корутин до старта; `runBlocking` в резолвере; мьютекс SoundCloud; 500 мс пересборка состояния; экспортированный сервис; потеря причины ошибки; `SimpleCache` на главном потоке; запись каждые 5 с; `verify.ps1` и `local.properties`; (P2-14 перечислена) |
+| P3 | 11 | P3-15 … P3-24 |
+
+Ни одного P0: сборка, unit-тесты и lint проходят, сквозной путь
+`поиск → очередь → сервис → отложенное разрешение URL → чекпоинт` собран
+корректно, а наиболее вероятные «всё сломанные» гипотезы (mimeType-рассинхрон,
+single-flight, взаимоблокировка в `SoundCloudClient`, гонка в апсерте истории)
+проверены и **не подтвердились**.

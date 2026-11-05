@@ -1,0 +1,15 @@
+.gradle/
+.kotlin/
+**/build/
+local.properties
+# Backups of the machine-local local.properties hold an SDK path of one
+# machine; they must never be committed.
+local.properties.*.bak
+*.jks
+*.keystore
+captures/
+# The root .gitignore excludes "*.log" for the Python project. The logs of
+# this tree are the review evidence (the output of the build, of the source
+# checks and of the live probe) and belong to the review, like the JSON and
+# Markdown artefacts next to them.
+!*.log

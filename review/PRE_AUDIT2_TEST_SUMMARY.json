@@ -1,0 +1,307 @@
+{
+  "date": "2026-10-19",
+  "stage": "bug search and fixes; source-only",
+  "unit": {
+    "passed": 217,
+    "tests": 218,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "new_tests": 44,
+    "classes": [
+      {
+        "class": "ru.nedotify.app.data.AudioSettingsStoreTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.AudioSettingsTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.AuthPkceTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.BackupCodecTest",
+        "tests": 18,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.BackupMergeTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.CatalogProvidersTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.DesktopLibraryConverterTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.DiscoveryRankingTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.ListeningReportsTest",
+        "tests": 10,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.LiveProviderProbeTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 1
+      },
+      {
+        "class": "ru.nedotify.app.data.LocalImportTitleTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.LyricsCascadeTest",
+        "tests": 9,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.LyricsDataTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.LyricsDiskCacheTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.NetworkBoundsQualityTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.ProfileSettingsTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.ProviderConnectionsTest",
+        "tests": 22,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SearchAggregateTest",
+        "tests": 6,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SignedUrlExpiryTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SmartObservationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SmartRulesTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SoundCloudFormatTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SoundCloudSingleFlightTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SourceContractTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.SourceDeadlineTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.StreamCacheTest",
+        "tests": 7,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.TrackLibraryStateTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.data.YouTubeMetadataTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.downloads.DownloadCancellationTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.downloads.DownloadKeysTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.CrossfadePolicyTest",
+        "tests": 8,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.ListeningClockTest",
+        "tests": 1,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.ListeningHistoryTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.PendingSelectionGateTest",
+        "tests": 3,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.PlaybackFocusStateTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.PlaybackMutationTest",
+        "tests": 5,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.player.QueueSelectionTest",
+        "tests": 12,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.ui.PlaybackErrorsTest",
+        "tests": 2,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      {
+        "class": "ru.nedotify.app.ui.PlaybackPreparationTest",
+        "tests": 4,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    ]
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 17,
+    "by_id": {
+      "AndroidGradlePluginVersion": 1,
+      "ExportedService": 1,
+      "GradleDependency": 5,
+      "NewerVersionAvailable": 8,
+      "UseKtx": 2
+    }
+  },
+  "instrumentation": {
+    "compiled_tests": 55,
+    "new_tests": 7,
+    "run": false
+  },
+  "apk_built": false,
+  "runtime_checked": false,
+  "cross_area_bugfix_audit": true,
+  "two_independent_full_reviews_of_current_sources": false
+}

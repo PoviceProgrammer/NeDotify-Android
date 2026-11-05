@@ -1,0 +1,74 @@
+// Prints the effective AGP model of every variant of every Android module.
+//
+// It reads the model that AGP has already built; it resolves nothing, it
+// downloads nothing and it packages nothing. It is the way to answer "what
+// would a release build really be?" while the APK ban holds.
+//
+// Usage: gradle --init-script dump-variant-model.gradle dumpVariantModel
+
+def captured = []
+
+gradle.beforeProject { p ->
+    p.pluginManager.withPlugin('com.android.application') {
+        def components = p.extensions.findByName('androidComponents')
+        // The Action overload is selected explicitly: the Function1 overload
+        // makes a Groovy closure ambiguous.
+        components.onVariants(components.selector().all(),
+            { variant -> captured << [path: p.path, owner: p, variant: variant] } as org.gradle.api.Action)
+    }
+}
+
+gradle.projectsEvaluated {
+    gradle.rootProject.tasks.register('dumpVariantModel') {
+        group = 'verification'
+        description = 'Prints the effective AGP variant model (no packaging).'
+        doLast {
+            // The DSL level: what the build script asked for.
+            gradle.rootProject.allprojects { p ->
+                def android = p.extensions.findByName('android')
+                if (android == null) { return }
+                println "MODULE ${p.path}"
+                println "  namespace=${android.namespace}"
+                println "  applicationId=${android.defaultConfig.applicationId}"
+                println "  minSdk=${android.defaultConfig.minSdk} targetSdk=${android.defaultConfig.targetSdk}"
+                android.buildTypes.all { bt ->
+                    def files = []
+                    bt.proguardFiles.each { files << it }
+                    println "  buildType ${bt.name}: applicationIdSuffix=${bt.applicationIdSuffix}" +
+                        " versionNameSuffix=${bt.versionNameSuffix} minifyEnabled=${bt.minifyEnabled}" +
+                        " shrinkResources=${bt.shrinkResources} debuggable=${bt.debuggable}" +
+                        " signingConfig=${bt.signingConfig?.name} proguardFiles=${files}"
+                }
+                android.signingConfigs.all { sc ->
+                    println "  signingConfig ${sc.name}: storeFile=${sc.storeFile}" +
+                        " storePassword=${sc.storePassword != null} keyAlias=${sc.keyAlias}" +
+                        " keyPassword=${sc.keyPassword != null} enableV1=${sc.enableV1Signing}" +
+                        " enableV2=${sc.enableV2Signing} enableV3=${sc.enableV3Signing}"
+                }
+            }
+            // The variant level: what AGP has resolved the DSL into.
+            captured.each { entry ->
+                def v = entry.variant
+                println "VARIANT ${entry.path}:${v.name}"
+                println "  buildType=${v.buildType} flavor=${v.flavorName}"
+                println "  applicationId=${v.applicationId.get()}"
+                println "  debuggable=${v.debuggable}"
+                println "  minifyEnabled=${v.isMinifyEnabled()}"
+                println "  shrinkResources=${v.shrinkResources}"
+                println "  signingConfig=${v.signingConfig != null}"
+                def proguard = []
+                v.proguardFiles.get().each { proguard << it }
+                println "  proguardFiles=${proguard}"
+                // The tasks that only exist when the shrinker is wired for the
+                // variant. Their presence is the proof that R8 and the
+                // resource shrinker are really part of the release pipeline.
+                def names = ['minify' + v.name.capitalize() + 'WithR8', 'shrink' + v.name.capitalize() + 'Res']
+                names.each { taskName ->
+                    println "  task ${taskName}=${entry.owner.tasks.findByName(taskName) != null}"
+                }
+                def shrinkers = entry.owner.tasks.names.findAll { it.toLowerCase().contains('shrink') || it.toLowerCase().contains('optimize') }
+                println "  shrinkerTasks=${shrinkers}"
+            }
+        }
+    }
+}
