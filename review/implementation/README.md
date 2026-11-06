@@ -1,7 +1,8 @@
 # Standalone validation evidence
 
-Owner: **V**. Integration owner: **L**. Device and APK checks remain **NOT_RUN**
-while the explicit APK prohibition in `AGENTS.md` applies.
+Owner: **V**. Integration owner: **L**. PO authorized debug APK packaging for
+manual testing on 2026-11-06. Local package source/hash are in `APK.json`;
+device execution and acceptance remain **NOT_RUN**.
 
 ## What is executable now
 
@@ -30,6 +31,9 @@ verification merely because they exist.
 
 `.github/workflows/android-source.yml` runs from this standalone root.
 `android/source` requires policy, source build and cold-cache planning to succeed.
+The mandatory build job also assembles the authorized debug APK and uploads its
+hash and binary as a separate artifact. Source-only reports describe the five-task
+gate; packaging evidence and device outcomes are separate records.
 The cold compile may be skipped only when the successful planning job explicitly
 determines that dependency/build-policy inputs did not change. Dependency changes,
 introduction or modification of this workflow/source-build policy, the initial

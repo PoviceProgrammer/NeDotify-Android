@@ -1,21 +1,24 @@
 # Execution gates — 2026-11-06
 
-Source tree digest: `a050defae560e32afbc0efeec581a3212d4358d64fa6e7431ff92cf38e97aa52`.
-Manifest SHA-256: `e93b79826a22c5342f35f1bd9d3f7407e5069c6030ed7acbd6e1b08b2d23b8c5` (325 source files).
+Source tree digest: a45c8d94c420e2f110693d0f16a25bd8dc3cea0ee3e6d89992e2fdc3658faaaa
+Source manifest SHA-256: aae2386f334652763894b8842421e0b8375b48bb50d099855b1ec03e590f6273; 325 files.
 
-| Gate | Current evidence / remaining work |
+| Gate | Evidence / remaining work |
 |---|---|
-| G0 base | Standalone public repository; main requires strict `android/source`, including administrators; no force push/deletion. Cloud execution is authoritative in the pull request checks. |
-| G1 design | PO selected B; clarity 3/4/4 and identity 5/5/5 recorded. Browser baselines and token source frozen. Full measured weighted comparison remains incomplete; no measured winner claim. |
-| G2 architecture | PASS_SOURCE_ONLY: MusicViewModel deleted, nine feature owners, process-scoped PlaybackConnection, bounded typed routes; search/navigation/controller/checkpoint regression passed. Android lifecycle/process-death proof remains NOT_RUN. |
-| G3 source | PASS_LOCAL: five explicit tasks succeeded; 633 JVM tests, zero failures/errors/skips; lint 0 errors/2 existing warnings; 79 instrumentation test definitions compiled, not executed. Source unchanged during run; cloud result is separate. |
-| G4 Android | BLOCKED: APK prohibition (PO) and actual D01–D22/device/audio/screenshot acceptance not executed (V/C/U/L). |
-| G5 readiness | BLOCKED by G4 and remaining quantitative/native design evidence. No release-ready claim. |
+| G0 | Public standalone repository; protected main requires android/source. Current PR cloud result is authoritative. |
+| G1 | PO selected B; clarity 3/4/4 and identity 5/5/5. Browser baselines/tokens frozen; full quantitative comparison and native parity remain pending. |
+| G2 | PASS_SOURCE_ONLY: aggregate VM removed; nine feature owners and shared controller; behavior regressions passed. Android lifecycle/process-death proof NOT_RUN. |
+| G3 | PASS_LOCAL: five explicit tasks, 633 JVM tests, zero failures/errors/skips; lint 0 errors/2 existing warnings; 79 instrumentation definitions compiled, not executed. |
+| APK | PACKAGED: user authorized manual debug testing on 2026-11-06; signature, minSdk 26, targetSdk 37 and new feature-VM classes verified. Source/hash in APK.json. |
+| G4 | NOT_RUN: manual device/audio/native screenshot/TalkBack and D01–D22 results still required. |
+| G5 | BLOCKED by remaining device/design evidence; no release-ready claim. |
 
-Local run: 2026-11-06 06:41:11–06:45:42 UTC, 49 tasks executed, debug/release Kotlin, JVM, lint and androidTest Kotlin compilation. Gradle used a session-local 2 GiB heap, in-process Kotlin and one worker. The earlier 1 GiB full run failed with GC thrashing and is not successful evidence. Media3 opt-in and instrumentation API integration errors were corrected before this final run.
+Local five-task run: 11/06/2026 07:05:31 – 11/06/2026 07:10:30; source unchanged. Session-local Gradle heap 2 GiB, in-process Kotlin, one worker.
 
-Authoritative local files: `review/VALIDATION.md`, `review/TEST_SUMMARY.json`, `review/SOURCE_SHA256.txt`. Required cloud workflow: [Android source](https://github.com/PoviceProgrammer/NeDotify-Android/actions/workflows/android-source.yml). These execution reports are excluded from the source digest to avoid circular identity; they cannot authorize APK/device work.
+Delivered local APK: output/NeDotify-B-37642cb-debug.apk; source 37642cbd7544d8fbdae87ee83c1bb19e515bedfb; SHA-256 65d47f1ce2c8a723bc938f324c4421d7b7a85105a6fd15cf2c520e11c3d8844b. No device installation/execution was performed.
 
-Two lint warnings remain: ExportedService (MediaSessionService) and UseKtx (existing MediaStore artwork URI). No lint check was disabled to pass the new UI. Compiled legacy Compose test-rule APIs also emit deprecation warnings; changing that test scheduler is outside this source integration.
+Cloud attempts: [42174831681](https://github.com/PoviceProgrammer/NeDotify-Android/actions/runs/42174831681) exposed obsolete SDK tools/default Unix dotfile behavior; fixed. [42176708053](https://github.com/PoviceProgrammer/NeDotify-Android/actions/runs/42176708053) passed the full source build and strict cold-cache compile, but the policy harness leaked an expected subprocess failure exit. The harness now explicitly succeeds only after all assertions, and still returns nonzero on a real assertion failure. The next required aggregate check must pass; neither failed attempt counts as aggregate success.
 
-Cloud attempt [42174831681](https://github.com/PoviceProgrammer/NeDotify-Android/actions/runs/42174831681) failed before compilation: obsolete SDK tools package and Unix dotfile enumeration. Both causes were corrected; all 11 infrastructure checks passed again under PS5/PS7. The next run must pass every required job; the failed run is not cloud success evidence.
+Source reports have scope source-gate-only. Separate debug packaging evidence is APK.json; the mandatory CI build also assembles a debug APK. Device evidence remains a separate gate. Older source-only reports that say APK NOT_RUN describe their five-task invocation, not later manual packaging.
+
+Current local lint warnings: ExportedService (MediaSessionService) and UseKtx (existing MediaStore URI). No lint checks were disabled to pass the new UI. Legacy Compose test-rule API deprecation warnings remain; changing that test scheduler is outside this integration.

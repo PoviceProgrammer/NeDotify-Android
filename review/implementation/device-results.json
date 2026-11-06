@@ -8,7 +8,7 @@
     "model": null
   },
   "status": "NOT_RUN",
-  "reason": "APK builds remain prohibited",
+  "reason": "Device acceptance has not been run; debug APK is authorized for manual user testing.",
   "scenarios": [
     {
       "id": "D01",

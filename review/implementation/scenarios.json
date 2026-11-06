@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "purpose": "Acceptance specification, not execution evidence. Actual outcomes belong in device-results.json.",
   "executionOwner": "V",
-  "policy": { "apkPackaging": "NOT_RUN", "instrumentationExecution": "NOT_RUN", "deviceAcceptance": "NOT_RUN", "reason": "APK builds remain forbidden until the user lifts the restriction." },
+  "policy": { "debugApkPackaging": "AUTHORIZED", "instrumentationExecution": "NOT_RUN", "deviceAcceptance": "NOT_RUN", "reason": "Debug APK authorized for manual user testing on 2026-11-06; Android execution is not acceptance evidence until recorded." },
   "fixturePolicy": {
     "profile": "Separate test-only Android app/profile and synthetic fixtures",
     "forbiddenTargets": ["real device library", "real provider secrets", "host ~/.nedotify", "original imported desktop database"],

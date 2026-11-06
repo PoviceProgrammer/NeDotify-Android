@@ -60,6 +60,12 @@ jobs:
       - name: Run the five explicit source tasks without APK packaging
         shell: pwsh
         run: ./tools/run-source-build.ps1
+      - name: Assemble authorized debug APK
+        run: bash ./gradlew --console=plain :app:assembleDebug
+      - name: Record debug APK identity
+        run: |
+          sha256sum app/build/outputs/apk/debug/app-debug.apk > app/build/reports/debug-apk.sha256
+          git rev-parse HEAD > app/build/reports/debug-apk-source.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -67,6 +73,13 @@ jobs:
           path: |
             app/build/reports/
             app/build/test-results/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: |
+            app/build/outputs/apk/debug/app-debug.apk
+            app/build/reports/debug-apk.sha256
+            app/build/reports/debug-apk-source.txt
 
   dependency-plan:
     name: Determine cold-cache requirement
@@ -130,7 +143,7 @@ jobs:
         run: |
           . ./tools/SourceGatePolicy.ps1
           Assert-SourceJobResults ($env:SOURCE_JOB_RESULTS | ConvertFrom-Json)
-          Write-Output 'All mandatory source checks succeeded. APK/device/visual checks remain NOT_RUN.'
+          Write-Output 'Source checks and authorized debug APK packaging succeeded. Device/visual execution remains NOT_RUN.'
 
-# APK packaging, installation and instrumentation execution are deliberately
-# absent while AGENTS.md forbids APK builds. No workflow input bypasses this.
+# Debug APK packaging was authorized on 2026-11-06. Device installation,
+# instrumentation execution and release publication remain outside this workflow.

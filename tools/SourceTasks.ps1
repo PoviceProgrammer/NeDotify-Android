@@ -17,6 +17,6 @@ function Assert-SourceTasks([string[]]$Tasks) {
         ':app:signingReport', ':dumpVariantModel', ':reportNewerVersions')
     if (-not $Tasks.Count) { throw 'Select at least one source-only task.' }
     foreach ($task in $Tasks) {
-        if ($task -cnotin $allowed) { throw "Task '$task' is outside the source-only gate. APK and device tasks are forbidden by android/AGENTS.md." }
+        if ($task -cnotin $allowed) { throw "Task '$task' is outside the source-only gate. Packaging is a separate step; see AGENTS.md for authorization." }
     }
 }

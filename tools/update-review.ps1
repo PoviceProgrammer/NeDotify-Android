@@ -161,6 +161,8 @@ $drift = Compare-ReviewSnapshot $project
 $manifestHash = if (Test-Path -LiteralPath $manifest) { Get-ReviewFileHash $manifest } else { '' }
 
 $summary = [ordered]@{
+    scope = 'source-gate-only'
+    separate_apk_evidence = 'review/implementation/APK.json'
     generated_utc = [DateTime]::UtcNow.ToString('o')
     source = @(
         'app/build/test-results/testDebugUnitTest/*.xml (JUnit XML of :app:testDebugUnitTest)',
@@ -195,6 +197,8 @@ $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $projec
 
 # --- the current snapshot ----------------------------------------------------
 $snapshot = [ordered]@{
+    scope = 'source-gate-only'
+    separate_apk_evidence = 'review/implementation/APK.json'
     generated_utc = [DateTime]::UtcNow.ToString('o')
     date = (Get-Date).ToString('yyyy-MM-dd')
     stage = 'standalone-ui-foundation'
@@ -231,8 +235,9 @@ _Сгенерировано `tools/update-review.ps1` из реальных ре
 - **BUILD SUCCESSFUL**: `:app:compileDebugKotlin`, `:app:compileReleaseKotlin`,
   `:app:testDebugUnitTest`, `:app:lintDebug`,
   `:app:compileDebugAndroidTestKotlin`. Вызваны только эти пять разрешённых
-  source-задач. Упаковка APK/AAB и запуск Android не выполнялись. Вспомогательные
-  задачи упаковки ресурсов и JAR выполняются Gradle автоматически.
+  source-задач. Сам source-gate не упаковывает APK/AAB и не запускает Android.
+  Разрешённая debug-сборка учитывается отдельно в `review/implementation/APK.json`.
+  Вспомогательные задачи упаковки ресурсов и JAR выполняются Gradle автоматически.
 - Команда (из корня репозитория):
 
       powershell -NoProfile -File tools/run-source-build.ps1 -RerunTasks

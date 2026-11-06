@@ -1,5 +1,7 @@
 ﻿{
-    "generated_utc":  "2026-11-06T06:47:39.7269386Z",
+    "scope":  "source-gate-only",
+    "separate_apk_evidence":  "review/implementation/APK.json",
+    "generated_utc":  "2026-11-06T07:12:01.0697786Z",
     "source":  [
                    "app/build/test-results/testDebugUnitTest/*.xml (JUnit XML of :app:testDebugUnitTest)",
                    "app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt (:app:lintDebug)",
@@ -7,15 +9,15 @@
                ],
     "freshness":  {
                       "newest_source":  ".github/workflows/android-source.yml",
-                      "newest_source_utc":  "2026-11-06T06:32:06.9652602Z",
-                      "junit_xml_utc":  "2026-11-06T06:43:51.9061828Z",
-                      "lint_report_utc":  "2026-11-06T06:45:26.6503056Z",
+                      "newest_source_utc":  "2026-11-06T07:05:30.4554273Z",
+                      "junit_xml_utc":  "2026-11-06T07:08:50.9239555Z",
+                      "lint_report_utc":  "2026-11-06T07:10:14.5230789Z",
                       "newer_than_every_source":  true
                   },
     "build_evidence":  {
                            "schemaVersion":  1,
-                           "startedUtc":  "2026-11-06T06:41:11.4279808Z",
-                           "finishedUtc":  "2026-11-06T06:45:42.9709519Z",
+                           "startedUtc":  "2026-11-06T07:05:31.3554130Z",
+                           "finishedUtc":  "2026-11-06T07:10:30.4991877Z",
                            "tasks":  [
                                          ":app:compileDebugKotlin",
                                          ":app:compileReleaseKotlin",
@@ -24,7 +26,7 @@
                                          ":app:compileDebugAndroidTestKotlin"
                                      ],
                            "exitCode":  0,
-                           "sourceDigest":  "a050defae560e32afbc0efeec581a3212d4358d64fa6e7431ff92cf38e97aa52",
+                           "sourceDigest":  "a45c8d94c420e2f110693d0f16a25bd8dc3cea0ee3e6d89992e2fdc3658faaaa",
                            "sourceUnchanged":  true,
                            "failure":  null,
                            "apkPackaging":  "NOT_RUN",
@@ -659,7 +661,7 @@
                                "UseKtx":  1
                            },
                  "report":  "app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt",
-                 "generated_utc":  "2026-11-06T06:45:26.6503056Z",
+                 "generated_utc":  "2026-11-06T07:10:14.5230789Z",
                  "findings":  [
                                   {
                                       "file":  "app/src/main/AndroidManifest.xml",
@@ -682,7 +684,7 @@
                         },
     "snapshot":  {
                      "files":  325,
-                     "manifest_sha256":  "e93b79826a22c5342f35f1bd9d3f7407e5069c6030ed7acbd6e1b08b2d23b8c5",
+                     "manifest_sha256":  "aae2386f334652763894b8842421e0b8375b48bb50d099855b1ec03e590f6273",
                      "new":  [
 
                              ],

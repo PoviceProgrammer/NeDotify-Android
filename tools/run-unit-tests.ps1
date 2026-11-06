@@ -33,8 +33,8 @@
     one value to a [string[]] parameter.
 #>
 param(
-    # Gradle tasks to run. `assemble*` / `bundle*` / `package*` are forbidden
-    # by android/AGENTS.md and are rejected below.
+    # This source-only entry point rejects packaging/device tasks. Authorized
+    # debug packaging uses a separate direct Gradle invocation (see AGENTS.md).
     [string[]]$Tasks = @(':app:testDebugUnitTest'),
     # Print the parsed JUnit XML summary of the unit-test run.
     [switch]$Summarize,

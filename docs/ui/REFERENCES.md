@@ -30,5 +30,5 @@ font/render match has not been measured. The handover requires the same text,
 fixture data, window width, theme and selected font; solid colors match exactly,
 key geometry tolerance is 2 dp, and intentional renderer differences are recorded.
 
-Native screenshot capture and TalkBack evidence remain NOT_RUN while APK building
-is prohibited. A rendered browser view must never be recorded as Android evidence.
+Native screenshot capture and TalkBack evidence remain NOT_RUN until Android
+execution is performed. A rendered browser view must never be recorded as Android evidence.

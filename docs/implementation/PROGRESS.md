@@ -5,7 +5,7 @@
 - Standalone repository: https://github.com/PoviceProgrammer/NeDotify-Android
 - Baseline: `0b10607ddb2b9cbce215430f0c48b4928f0abdb7`.
 - User selected Riff + Android, UI + backend audit, browser prototype first.
-- APK packaging and device tasks remain forbidden. No application data is touched.
+- On 2026-11-06 PO authorized a debug APK for manual testing; the first signed APK and its source/hash are recorded in review/implementation/APK.json. No application data is touched; device execution remains NOT_RUN.
 - User explicitly authorized public visibility after the publication audit. Main now requires `android/source`, strict up-to-date checks, administrator enforcement, and rejects force pushes/deletions.
 - Baseline source run: compileDebugKotlin, compileReleaseKotlin, testDebugUnitTest, lintDebug, compileDebugAndroidTestKotlin; 49 tasks executed, 604 tests, 0 failures/errors/skips. Instrumentation compiled only. Historical reports are not evidence for subsequent changes.
 - Actual Room schema is **v4**, with 1→2→3→4 migrations. Older v3 descriptions are historical.
@@ -25,9 +25,9 @@
 | W8 screens | U | IMPLEMENTED_SOURCE | Variant B screens use real feature state; actual Android rendering remains NOT_RUN |
 | W9 confirmed fixes | C | SEE_AUDIT | Defects require observed red/green regression, then matching final source gate |
 | W10 regression | V + L | SEE_REVIEW | Exact source identity, task results and counts belong to review/VALIDATION.md |
-| W11 device | V | BLOCKED | APK authorization and device; actual audio evidence |
+| W11 device | V + PO | NOT_RUN | Debug APK is available; actual device/audio evidence is still required |
 
-G0/G3 decisions must use the matching local source report and required GitHub `android/source` check, not infer success from this implementation inventory. PO selected B and authorized native implementation; full quantitative G1 evaluation remains incomplete and is not represented as a measured win. G2 source ownership is implemented; Android restoration/resource proof remains pending. Current execution gates are recorded separately in review/implementation/GATES.md. G4/G5 are blocked by APK prohibition and unexecuted device acceptance.
+G0/G3 decisions must use the matching local source report and required GitHub `android/source` check, not infer success from this implementation inventory. PO selected B and authorized native implementation; full quantitative G1 evaluation remains incomplete and is not represented as a measured win. G2 source ownership is implemented; Android restoration/resource proof remains pending. Current execution gates are recorded separately in review/implementation/GATES.md. G4/G5 await actual device acceptance; debug packaging is authorized and recorded separately.
 
 Engineering estimate remains 158–254 h plus 20% reserve (190–305 h). Parallel critical path: W0 → W1 → W4 → W5/W6 → W7/W8 → W10 → W11. External waiting is excluded.
 

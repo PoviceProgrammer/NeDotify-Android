@@ -5,18 +5,21 @@
 [владение состоянием](docs/implementation/STATE_OWNERSHIP.md), [аудит ядра](docs/audit/README.md).
 Пользователь выбрал вариант B — коллекция и скорость. Compose-экраны подключены
 к отдельным владельцам состояния, общий MusicViewModel удалён. Текущие результаты
-проверок привязаны к снимку в review; APK и проверка на устройстве остаются запрещены.
+проверок привязаны к снимку в review. 2026-11-06 разрешена debug-сборка APK
+для ручного тестирования пользователем; приёмка на устройстве ещё не выполнена.
 
 Нативный Kotlin / Compose / Room / Media3-порт, без Python и WebView.
 Мобильный референс: [design/reference.png](design/reference.png).
 Состояние всех этапов и ограничения: [PORTING_STATUS.md](PORTING_STATUS.md).
 Проверки исходников: [review/VALIDATION.md](review/VALIDATION.md).
 
-**Новый APK сейчас не собирается по указанию пользователя.** Сохранённый APK
-0.2.0 не содержит JSON/desktop-перенос, новый UI и функции последнего этапа.
+**Debug APK разрешён для ручного тестирования.** Его исходный commit, SHA-256
+и параметры фиксируются в [APK.json](review/implementation/APK.json).
+Сборка: `./gradlew :app:assembleDebug`; результат — `app/build/outputs/apk/debug/app-debug.apk`.
+Это пакет `ru.nedotify.app.debug`, Android 8.0+. Успешная упаковка не подтверждает звук и device-приёмку.
 `Run-Android.bat` **не устанавливает** этот старый APK: `run-emulator.ps1`
 требует явный `-ApkPath` и без него завершается с ошибкой. Для тестирования
-нового кода позже потребуется разрешение собрать свежий APK.
+нового кода используйте только свежий APK с известным hash.
 
 ## Проверка исходников без APK
 
@@ -54,9 +57,9 @@ local.properties не трогает):
 
     ./gradlew :app:compileDebugKotlin :app:compileReleaseKotlin :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin
 
-Список допустимых задач — `tools/SourceTasks.ps1`: сборка APK и
-задачи устройства запрещены (`AGENTS.md`), попытка вызвать их
-останавливается до запуска Gradle.
+Список задач source-gate — `tools/SourceTasks.ps1`: он проверяет исходники.
+Разрешённая debug-упаковка выполняется отдельным вызовом Gradle. Установка
+и выполнение тестов на устройстве автоматически не запускаются.
 
 ## Зависимости, каталог версий и контроль целостности
 
@@ -194,8 +197,9 @@ local.properties не трогает):
 
 `.github/workflows/android-source.yml` — на каждый push/PR, меняющий
 `**`: снимок исходников, согласие каталога и блокировки, затем
-`:app:testDebugUnitTest`, `:app:lintDebug`, `:app:compileDebugAndroidTestKotlin`.
-APK не собирается. SDK ставится из репозитория (`platforms;android-37.0`,
+явные `compileDebugKotlin`/`compileReleaseKotlin`, `testDebugUnitTest`,
+`lintDebug`, `compileDebugAndroidTestKotlin` и разрешённая `assembleDebug`.
+SDK ставится из репозитория (`platforms;android-37.0`,
 `build-tools;36.0.0`), локальный путь к SDK не используется.
 
 * **Шаг со снимком — «растяжка» для каждого обычного изменения.** Любой
@@ -302,8 +306,8 @@ Hypervisor Platform; установка вернула RestartNeeded=true. Ав�
 рестарта не было, успешный запуск ускоренного Android не подтверждён.
 
 Run-Android.bat / run-emulator.ps1 проверяет ускорение, открывает видимый
-эмулятор и устанавливает сохранённый APK. **Для новых исходников это пока
-устаревший APK.** Не запускайте launcher для приёмки нового кода до новой сборки.
+эмулятор и устанавливает только явно переданный `-ApkPath`. Для приёмки нужен
+свежий APK с проверенными source/hash; архивный APK выбирать нельзя.
 Диагностика без установки: ./run-emulator.ps1 -CheckOnly.
 
 После разрешённой свежей сборки выполните

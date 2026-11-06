@@ -1,9 +1,11 @@
 ﻿{
-    "generated_utc":  "2026-11-06T06:47:39.7599255Z",
+    "scope":  "source-gate-only",
+    "separate_apk_evidence":  "review/implementation/APK.json",
+    "generated_utc":  "2026-11-06T07:12:01.1031234Z",
     "date":  "2026-11-06",
     "stage":  "standalone-ui-foundation",
     "files":  325,
-    "manifest_sha256":  "e93b79826a22c5342f35f1bd9d3f7407e5069c6030ed7acbd6e1b08b2d23b8c5",
+    "manifest_sha256":  "aae2386f334652763894b8842421e0b8375b48bb50d099855b1ec03e590f6273",
     "unit_tests":  633,
     "unit_passed":  633,
     "unit_failures":  0,
