@@ -48,7 +48,7 @@ _Сгенерировано `tools/update-review.ps1` из реальных ре
   (22 файлов в `app/src/androidTest`). Instrumentation не запускался
   ни на устройстве, ни на эмуляторе.
 - **Свежесть.** Все числа взяты из прогона, который **новее** самого свежего
-  исходника дерева (`app/src/androidTest/java/ru/nedotify/app/testing/IsolatedAndroidTestRunner.kt`).
+  исходника дерева (`.github/workflows/android-source.yml`).
 - **Снимок исходников**: файлов в манифесте — 325; расхождений —
   новых 0, изменённых 0, удалённых 0, не перечисленных 0.
 

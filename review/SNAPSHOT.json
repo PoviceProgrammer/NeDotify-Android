@@ -1,9 +1,9 @@
 ﻿{
-    "generated_utc":  "2026-11-06T06:28:00.5058166Z",
+    "generated_utc":  "2026-11-06T06:47:39.7599255Z",
     "date":  "2026-11-06",
     "stage":  "standalone-ui-foundation",
     "files":  325,
-    "manifest_sha256":  "b60e868b02200a3cd1e950348cff65e39099098bbd701c6c3f5e4e287073b027",
+    "manifest_sha256":  "e93b79826a22c5342f35f1bd9d3f7407e5069c6030ed7acbd6e1b08b2d23b8c5",
     "unit_tests":  633,
     "unit_passed":  633,
     "unit_failures":  0,

@@ -24,7 +24,8 @@ function Get-ReviewFileHash([string]$Path) {
 
 function Get-ReviewSources([string]$ProjectRoot) {
     $root = (Resolve-Path -LiteralPath $ProjectRoot).Path.TrimEnd('\', '/')
-    Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object {
+    # Unix dotfiles (including .github and .gitattributes) are source inputs too.
+    Get-ChildItem -LiteralPath $root -Recurse -File -Force | ForEach-Object {
         $relative = $_.FullName.Substring($root.Length + 1).Replace('\', '/')
         if ($relative -match '(^|/)(build|\.git|\.gradle|\.kotlin|node_modules|captures|output|\.playwright-cli)/' -or
             $relative -eq 'local.properties' -or
