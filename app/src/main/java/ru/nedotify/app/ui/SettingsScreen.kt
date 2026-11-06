@@ -1,5 +1,8 @@
 package ru.nedotify.app.ui
 
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+
 import android.os.Build
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -21,17 +24,17 @@ import ru.nedotify.app.data.detail
 import ru.nedotify.app.data.message
 
 @Composable
-fun SettingsScreen(model: MusicViewModel, onImport: () -> Unit, onScan: () -> Unit, onExportBackup: () -> Unit, onImportBackup: () -> Unit, backupPickerOpen: Boolean, onImportDesktop: (String) -> Unit = {}) {
+fun SettingsScreen(model: SettingsViewModel, connectionsModel:ConnectionsViewModel, transfers:TransfersViewModel, downloadsModel:DownloadsViewModel, searchModel:SearchViewModel, onImport: () -> Unit, onScan: () -> Unit, onExportBackup: () -> Unit, onImportBackup: () -> Unit, backupPickerOpen: Boolean, onImportDesktop: (String) -> Unit = {}) {
     val appearance by model.appearance.collectAsStateWithLifecycle()
-    val backupBusy by model.backupBusy.collectAsStateWithLifecycle()
-    val backupStatus by model.backupStatus.collectAsStateWithLifecycle()
-    val backupError by model.backupError.collectAsStateWithLifecycle()
-    val searches by model.searchHistory.collectAsStateWithLifecycle()
+    val backupBusy by transfers.backupBusy.collectAsStateWithLifecycle()
+    val backupStatus by transfers.backupStatus.collectAsStateWithLifecycle()
+    val backupError by transfers.backupError.collectAsStateWithLifecycle()
+    val searches by searchModel.searchHistory.collectAsStateWithLifecycle()
     val audio by model.audioSettings.collectAsStateWithLifecycle()
     val audioStatus by model.audioStatus.collectAsStateWithLifecycle()
-    val audioFailure by model.repository.audioSettings.writeFailure.collectAsStateWithLifecycle()
-    val connections by model.connections.collectAsStateWithLifecycle()
-    val resets by model.repository.preferences.pendingResets.collectAsStateWithLifecycle()
+    val audioFailure by model.audioFailure.collectAsStateWithLifecycle()
+    val connections by connectionsModel.connections.collectAsStateWithLifecycle()
+    val resets by model.pendingResets.collectAsStateWithLifecycle()
     var clearSearches by rememberSaveable { mutableStateOf(false) }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         item { PageTitle("Настройки", "Настройте приложение под себя") }
@@ -59,13 +62,13 @@ fun SettingsScreen(model: MusicViewModel, onImport: () -> Unit, onScan: () -> Un
             }
         }
         item { SettingsHeading("Музыка и хранилище") }
-        item { ConnectionsControls(connections, model::configureSpotify, model::beginSpotifyLogin, model::saveYandexToken, model::logoutProvider, model::openCatalog) }
-        item { CatalogImportSummary(model) }
+        item { ConnectionsControls(connections, connectionsModel::configureSpotify, connectionsModel::beginSpotifyLogin, connectionsModel::saveYandexToken, connectionsModel::logoutProvider, connectionsModel::openCatalog) }
+        item { CatalogImportSummary(connectionsModel) }
         item {
             Column(Modifier.fillMaxWidth().glass().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SettingSwitch("Офлайн-режим", "Поиск в локальной библиотеке; воспроизведение файлов и завершённых загрузок", appearance.offline, model::offline)
                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = .35f))
-                DownloadsSummary(model)
+                DownloadsSummary(downloadsModel)
                 TextButton(onImport, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                     Icon(Icons.Outlined.FolderOpen, null); Spacer(Modifier.width(10.dp)); Text("Выбрать аудиофайлы")
                 }
@@ -95,13 +98,13 @@ fun SettingsScreen(model: MusicViewModel, onImport: () -> Unit, onScan: () -> Un
     }
     if (clearSearches) AlertDialog(onDismissRequest = { clearSearches = false }, title = { Text("Очистить историю поиска?") },
         text = { Text("Сохранённые поисковые запросы будут удалены с этого устройства.") },
-        confirmButton = { TextButton({ model.clearSearchHistory(); clearSearches = false }) { Text("Очистить") } },
+        confirmButton = { TextButton({ searchModel.clearSearchHistory(); clearSearches = false }) { Text("Очистить") } },
         dismissButton = { TextButton({ clearSearches = false }) { Text("Отмена") } })
 }
 
 /** Recovery controls stay reachable after process recreation or closing the catalogue. */
 @Composable
-private fun CatalogImportSummary(model:MusicViewModel) {
+private fun CatalogImportSummary(model:ConnectionsViewModel) {
     val state by model.catalogImports.state.collectAsStateWithLifecycle()
     if(state.importing || state.paused)Column(Modifier.fillMaxWidth().glass().padding(16.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
         Text("Импорт: ${state.title}",style=MaterialTheme.typography.titleMedium)
@@ -121,7 +124,7 @@ private fun CatalogImportSummary(model:MusicViewModel) {
  * re-run every control of the settings.
  */
 @Composable
-private fun DownloadsSummary(model: MusicViewModel) {
+private fun DownloadsSummary(model: DownloadsViewModel) {
     val downloads by model.downloads.collectAsStateWithLifecycle()
     Text("Скачано ${downloads.count { it.download.state == "complete" }} треков · ${downloadSize(downloads.filter {it.download.state=="complete"}.sumOf { it.download.bytes.coerceAtLeast(0) })}",
         style = MaterialTheme.typography.bodyMedium)

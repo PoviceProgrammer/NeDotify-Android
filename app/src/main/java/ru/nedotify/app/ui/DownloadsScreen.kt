@@ -1,5 +1,8 @@
 package ru.nedotify.app.ui
 
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -15,15 +18,15 @@ import ru.nedotify.app.data.*
 import java.util.Locale
 
 @Composable
-fun DownloadCard(row:DownloadWithTrack,model:MusicViewModel,queue:List<Track>) {
+fun DownloadCard(row:DownloadWithTrack,model:DownloadsViewModel,playback:PlaybackConnection,queue:List<Track>) {
     val item=row.download;val track=row.track
     var confirmRemove by remember {mutableStateOf(false)}
-    Column(Modifier.fillMaxWidth().glass(14.dp).clickable(enabled=item.state=="complete"){model.play(track,queue)}.padding(12.dp)) {
+    Column(Modifier.fillMaxWidth().glass(14.dp).clickable(enabled=item.state=="complete"){playback.play(track,queue)}.padding(12.dp)) {
         Row(verticalAlignment=Alignment.CenterVertically) {
             Cover(track.coverUrl,Modifier.size(48.dp))
             Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
                 Text(track.title,maxLines=2,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelLarge)
-                Text(track.artist,maxLines=1,overflow=TextOverflow.Ellipsis,fontSize=12.sp,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(track.artist,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(when(item.state) {
                     "complete"->"Скачано · ${downloadSize(item.bytes)}"
                     "downloading"->"${if(item.percent>=0)"${item.percent.toInt()}% · " else ""}${downloadSize(item.bytes)}"
@@ -32,7 +35,7 @@ fun DownloadCard(row:DownloadWithTrack,model:MusicViewModel,queue:List<Track>) {
                     "paused"->"На паузе · ${downloadSize(item.bytes)}"
                     "removing"->"Удаление…"
                     else->item.error.ifBlank {"Загрузка прервана"}
-                },fontSize=11.sp,color=if(item.state=="complete")Blue else MaterialTheme.colorScheme.onSurfaceVariant)
+                },style=MaterialTheme.typography.labelMedium,color=if(item.state=="complete")Blue else MaterialTheme.colorScheme.onSurfaceVariant)
             }
             when(item.state) {
                 "queued","preparing","downloading"->IconButton({model.pauseDownload(track.id)}){Icon(Icons.Filled.Pause,"Приостановить загрузку")}

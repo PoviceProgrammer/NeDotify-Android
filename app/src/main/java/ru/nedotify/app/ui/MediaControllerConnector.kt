@@ -2,6 +2,8 @@ package ru.nedotify.app.ui
 
 import androidx.media3.session.MediaController
 import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.CancellationException
+import java.util.concurrent.ExecutionException
 
 /**
  * The lifecycle of the media controller.
@@ -27,7 +29,14 @@ internal class ControllerConnector(
 
     /** Starts a connection when none is running. */
     fun connect() {
-        if(future!=null)return
+        future?.let { existing ->
+            if(!existing.isDone)return
+            try { existing.get();return }
+            catch(_:ExecutionException) { /* A new explicit connect may replace this failed attempt. */ }
+            catch(_:CancellationException) { /* Likewise for an abandoned one-shot attempt. */ }
+            catch(_:InterruptedException) {Thread.currentThread().interrupt();return}
+            release(existing);releases++;future=null
+        }
         builds++
         val built=build()
         future=built

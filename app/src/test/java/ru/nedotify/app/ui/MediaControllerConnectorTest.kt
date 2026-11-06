@@ -12,6 +12,57 @@ import org.junit.Test
  * playback entry point is a silent no-op (P3-108).
  */
 class MediaControllerConnectorTest {
+    @Test fun `an explicit retry replaces a cancelled initial connection`() {
+        val built=mutableListOf<SettableFuture<MediaController>>()
+        var released=0
+        val connector=ControllerConnector(
+            build={SettableFuture.create<MediaController>().also {built+=it}},
+            release={released++},onBuilt={})
+        connector.connect()
+        built.single().cancel(false)
+        connector.connect()
+        assertEquals(2,built.size)
+        assertEquals(1,released)
+        connector.connect()
+        assertEquals(2,built.size)
+    }
+
+    @Test fun `a synchronous build failure leaves the next explicit attempt possible`() {
+        var fail=true
+        val connector=ControllerConnector(build={
+            if(fail)throw IllegalStateException("synthetic build failure")
+            SettableFuture.create<MediaController>()
+        },release={},onBuilt={})
+        try {connector.connect();fail("The synthetic first build must fail")}
+        catch(_:IllegalStateException) { }
+        assertNull(connector.future)
+        fail=false
+        connector.connect()
+        assertNotNull(connector.future)
+        connector.connect()
+        assertEquals(2,connector.builds)
+    }
+
+    @Test fun `an explicit retry replaces a failed connection without duplicating a pending attempt`() {
+        val built=mutableListOf<SettableFuture<MediaController>>()
+        var released=0
+        val connector=ControllerConnector(
+            build={SettableFuture.create<MediaController>().also {built+=it}},
+            release={released++},onBuilt={})
+        connector.connect()
+        built.single().setException(IllegalStateException("synthetic session connection failure"))
+
+        // The application-owned connection survives Activity recreation: only a
+        // deliberate new connect can replace its failed one-shot future.
+        connector.connect()
+        assertEquals("Explicit retry must create a new connection",2,built.size)
+        assertEquals("The failed connection must be released exactly once",1,released)
+        assertSame(built.last(),connector.future)
+        connector.connect()
+        assertEquals("The new pending attempt must remain the only attempt",2,built.size)
+        assertEquals(1,released)
+    }
+
     private fun connector():Pair<ControllerConnector,MutableList<ListenableFuture<MediaController>>> {
         val built=mutableListOf<ListenableFuture<MediaController>>()
         val connector=ControllerConnector(

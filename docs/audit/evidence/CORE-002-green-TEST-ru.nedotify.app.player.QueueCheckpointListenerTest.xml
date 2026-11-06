@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.nedotify.app.player.QueueCheckpointListenerTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2026-11-05T19:39:12.229Z" hostname="DESKTOP-LB3GK64" time="0.053">
+  <properties/>
+  <testcase name="focusInterruptionAndPlayRequestDoNotForcePeriodicPositionWrites" classname="ru.nedotify.app.player.QueueCheckpointListenerTest" time="0.016"/>
+  <testcase name="userPausePersistsItsSubIntervalPositionBeforeServiceDestruction" classname="ru.nedotify.app.player.QueueCheckpointListenerTest" time="0.013"/>
+  <testcase name="userSeekPersistsItsSubIntervalPositionWithoutWaitingForPlaybackTick" classname="ru.nedotify.app.player.QueueCheckpointListenerTest" time="0.017"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

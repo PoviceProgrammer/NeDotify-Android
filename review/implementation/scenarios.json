@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Acceptance specification, not execution evidence. Actual outcomes belong in device-results.json.",
+  "executionOwner": "V",
+  "policy": { "apkPackaging": "NOT_RUN", "instrumentationExecution": "NOT_RUN", "deviceAcceptance": "NOT_RUN", "reason": "APK builds remain forbidden until the user lifts the restriction." },
+  "fixturePolicy": {
+    "profile": "Separate test-only Android app/profile and synthetic fixtures",
+    "forbiddenTargets": ["real device library", "real provider secrets", "host ~/.nedotify", "original imported desktop database"],
+    "requiredEvidence": ["sourceSha", "apkSha256", "device model/API", "executedUtc", "per-scenario result and evidence"]
+  },
+  "scenarios": [
+    { "id": "D01", "owner": "C", "scenario": "Clean start and Room v1/v2/v3 to current v4 upgrade", "expected": "Synthetic library, playlists, history and settings survive; restored queue is paused.", "status": "NOT_RUN" },
+    { "id": "D02", "owner": "C", "scenario": "SAF/MediaStore allow/deny, restart, moved file and relink", "expected": "Denial is explained; retained grant works; scanning never deletes collection entries.", "status": "NOT_RUN" },
+    { "id": "D03", "owner": "C", "scenario": "Local and available progressive/VOD HLS play/pause/seek/next/previous", "expected": "Actual audible sound and correct transport; bounded retry; pause during preparation stays paused.", "status": "NOT_RUN" },
+    { "id": "D04", "owner": "C", "scenario": "Queue duplicates, reorder, delete current/last, clear and restore", "expected": "Correct occurrence plays; shuffle/repeat order is retained; restart restores paused.", "status": "NOT_RUN" },
+    { "id": "D05", "owner": "C", "scenario": "Crossfade 0/1/6/12 seconds with short tracks, seek, pause and error", "expected": "Real two-deck transition; user actions or failures cancel safely; no unrequested resume.", "status": "NOT_RUN" },
+    { "id": "D06", "owner": "C", "scenario": "Call/other audio, transient/permanent focus, wired/BT disconnect", "expected": "One focus owner; correct duck/pause; late gain never overrides a user pause.", "status": "NOT_RUN" },
+    { "id": "D07", "owner": "C", "scenario": "EQ/bass/spatial support, absent support and session replacement", "expected": "Settings persist atomically; unsupported effects are identified; no leaked effects or clipping.", "status": "NOT_RUN" },
+    { "id": "D08", "owner": "C", "scenario": "Rotation, background, lock screen, Activity and process death", "expected": "Stable media owner/controller reconnect; paused checkpoint recovery; no spontaneous audio.", "status": "NOT_RUN" },
+    { "id": "D09", "owner": "C", "scenario": "Flow with empty/small library, offline, autoplay and unavailable source", "expected": "No retry loop; only eligible tracks are appended; empty state offers useful actions.", "status": "NOT_RUN" },
+    { "id": "D10", "owner": "C", "scenario": "Smart rules and favorite/download/history mutations", "expected": "Matching collection updates reactively; malformed rules can be repaired.", "status": "NOT_RUN" },
+    { "id": "D11", "owner": "C", "scenario": "All download states, network loss, restart, low storage, airplane mode", "expected": "Partial cache is never complete offline media; completed packages play without network; remove preserves library.", "status": "NOT_RUN" },
+    { "id": "D12", "owner": "C", "scenario": "JSON/desktop import cancel, merge, repeat, conflict and damaged input", "expected": "Original fixture copy is byte-identical; atomic/idempotent merge; no history duplication.", "status": "NOT_RUN" },
+    { "id": "D13", "owner": "C", "scenario": "Spotify PKCE login/cancel/restart callback/refresh/logout", "expected": "Valid one-time state; real access status; metadata and full audio availability distinguished.", "status": "NOT_RUN" },
+    { "id": "D14", "owner": "C", "scenario": "Yandex login/revocation/account rights and audio resolution", "expected": "Capability matches account rights; tokens are absent from logs and foreign requests.", "status": "NOT_RUN" },
+    { "id": "D15", "owner": "C", "scenario": "Keystore corruption/relogin and account change during requests", "expected": "Old account data and signed URLs cannot reappear under the new account; secrets stay out of backups.", "status": "NOT_RUN" },
+    { "id": "D16", "owner": "C", "scenario": "Fast query/source change, IME, history and partial source failure", "expected": "Obsolete response never replaces the new query; successful partial results remain available.", "status": "NOT_RUN" },
+    { "id": "D17", "owner": "U", "scenario": "Synced/plain/instrumental/missing/error lyrics, scroll and track change", "expected": "Text belongs to current track; manual reading and return work; retry bypasses negative cache.", "status": "NOT_RUN" },
+    { "id": "D18", "owner": "C", "scenario": "Listening history with seek/pause/replay/crossfade/day boundary", "expected": "Only measured listening time counts; no seek inflation or double counting.", "status": "NOT_RUN" },
+    { "id": "D19", "owner": "U", "scenario": "320/360/412dp, wide/split window, landscape, font 200%, TalkBack/RTL", "expected": "All primary actions, focus and text remain accessible; insets and back behavior are correct.", "status": "NOT_RUN" },
+    { "id": "D20", "owner": "U", "scenario": "Light/dark/system, accents, glass/power saver and first frame", "expected": "Consistent initial theme, opaque fallback and reduced motion; playback service is retained.", "status": "NOT_RUN" },
+    { "id": "D21", "owner": "V", "scenario": "Shared tokens, prototype geometry and native screenshot regression", "expected": "Exact color tokens; key dimensions within 2dp; same fixtures/font/theme; intentional deviations recorded.", "status": "NOT_RUN" },
+    { "id": "D22", "owner": "L", "scenario": "Long library and rapid commands during loading", "expected": "Responsive UI; no stale commands, unbounded retry or main-thread network/disk operation.", "status": "NOT_RUN" }
+  ]
+}

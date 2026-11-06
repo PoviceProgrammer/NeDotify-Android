@@ -26,10 +26,11 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import coil3.compose.AsyncImage
 import dev.chrisbanes.haze.*
+import ru.nedotify.app.ui.tokens.DesignTokens
 
 val Blue:Color
     @Composable get()=MaterialTheme.colorScheme.primary
-val Night=Color(0xFF0A0E17)
+val Night=Color(DesignTokens.Dark.background)
 val LocalGlass=staticCompositionLocalOf { true }
 val LocalPowerSave=staticCompositionLocalOf { false }
 val LocalOffline=staticCompositionLocalOf { false }
@@ -39,10 +40,18 @@ val LocalBackdrop=staticCompositionLocalOf<HazeState> { error("Missing backdrop"
 fun NeDotifyTheme(dark:Boolean,accent:String="cyan",content:@Composable ()->Unit) {
     val (primary,onPrimary)=themeAccentColors(accent,dark)
     val colors=neDotifyColorScheme(dark,primary,onPrimary)
+    fun type(size:Int,line:Int,weight:Int)=androidx.compose.ui.text.TextStyle(
+        fontFamily=FontFamily.SansSerif,fontSize=size.sp,lineHeight=line.sp,fontWeight=FontWeight(weight))
+    val body=type(DesignTokens.Typography.Body.size,DesignTokens.Typography.Body.lineHeight,DesignTokens.Typography.Body.weight)
+    val small=type(DesignTokens.Typography.BodySmall.size,DesignTokens.Typography.BodySmall.lineHeight,DesignTokens.Typography.BodySmall.weight)
+    val label=type(DesignTokens.Typography.Label.size,DesignTokens.Typography.Label.lineHeight,DesignTokens.Typography.Label.weight)
+    val title=type(DesignTokens.Typography.Title.size,DesignTokens.Typography.Title.lineHeight,DesignTokens.Typography.Title.weight)
+    val headline=type(DesignTokens.Typography.Headline.size,DesignTokens.Typography.Headline.lineHeight,DesignTokens.Typography.Headline.weight)
     MaterialTheme(colorScheme=colors,typography=Typography(
-        headlineLarge=androidx.compose.ui.text.TextStyle(fontFamily=FontFamily.SansSerif,fontSize=30.sp,fontWeight=FontWeight.Bold,lineHeight=36.sp),
-        headlineMedium=androidx.compose.ui.text.TextStyle(fontFamily=FontFamily.SansSerif,fontSize=25.sp,fontWeight=FontWeight.Bold,lineHeight=31.sp),
-        titleLarge=androidx.compose.ui.text.TextStyle(fontFamily=FontFamily.SansSerif,fontSize=20.sp,fontWeight=FontWeight.SemiBold,lineHeight=26.sp)
+        headlineLarge=headline,headlineMedium=headline,headlineSmall=title,
+        titleLarge=title,titleMedium=body.copy(fontWeight=FontWeight.SemiBold),titleSmall=small.copy(fontWeight=FontWeight.SemiBold),
+        bodyLarge=body,bodyMedium=body,bodySmall=small,
+        labelLarge=small.copy(fontWeight=FontWeight.Medium),labelMedium=label,labelSmall=label
     ),content=content)
 }
 
@@ -54,25 +63,25 @@ fun themeAccentColors(name:String,dark:Boolean):Pair<Color,Color> {
         val scheme=if(dark)dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         return scheme.primary to scheme.onPrimary
     }
-    return accentColor(name,dark) to if(dark)Color(0xFF001C2D) else Color.White
+    return accentColor(name,dark) to if(dark)Color(DesignTokens.Dark.onPrimary) else Color(DesignTokens.Light.onPrimary)
 }
 
 fun accentColor(name:String,dark:Boolean):Color=when(name) {
     "blue"->if(dark)Color(0xFF69ACFF) else Color(0xFF005AC4)
     "violet"->if(dark)Color(0xFFBDA1FF) else Color(0xFF6B42C8)
     "mint"->if(dark)Color(0xFF37D8BA) else Color(0xFF007563)
-    else->if(dark)Color(0xFF00B6F5) else Color(0xFF006A94)
+    else->if(dark)Color(DesignTokens.Dark.primary) else Color(DesignTokens.Light.primary)
 }
 
 @Composable
-fun Modifier.glass(radius:Dp=18.dp):Modifier {
+fun Modifier.glass(radius:Dp=DesignTokens.Radius.medium.dp,frosted:Boolean=false):Modifier {
     val colors=MaterialTheme.colorScheme
-    val enabled=LocalGlass.current && Build.VERSION.SDK_INT>=31 && !LocalPowerSave.current
+    val enabled=frosted && LocalGlass.current && Build.VERSION.SDK_INT>=31 && !LocalPowerSave.current
     val shape=RoundedCornerShape(radius)
     return this.clip(shape).then(if(enabled)Modifier.hazeEffect(LocalBackdrop.current,HazeStyle(
         backgroundColor=colors.surface,tint=HazeTint(colors.surface.copy(alpha=.78f)),blurRadius=14.dp,
         noiseFactor=0f,fallbackTint=HazeTint(colors.surface))) else Modifier.background(colors.surface))
-        .border(1.dp,colors.outline.copy(alpha=.6f),shape)
+        .border(1.dp,colors.outlineVariant.copy(alpha=.35f),shape)
 }
 
 /** One observer per app composition, rather than one receiver per glass row/card. */
@@ -95,23 +104,19 @@ internal fun rememberPowerSaveMode():Boolean {
 @Composable
 fun NightSky(modifier:Modifier=Modifier,dark:Boolean=true,decorated:Boolean=true) {
     val background=MaterialTheme.colorScheme.background
+    val accent=MaterialTheme.colorScheme.primary
     Canvas(modifier) {
-        if(!decorated) {drawRect(background);return@Canvas}
+        drawRect(background)
+        if(!decorated)return@Canvas
         val w=size.width;val h=size.height
-        drawRect(Brush.verticalGradient(if(dark)listOf(Color(0xFF03101C),Color(0xFF071A35),Color(0xFF38234B),Night)
-            else listOf(Color(0xFFE6F5FF),Color(0xFFD9DFFB),Color(0xFFF4DDEC),Color(0xFFF1F6FB))))
-        for(i in 0..65) {
-            val x=((i*67+13)%313)/313f*w
-            val y=((i*43+19)%271)/271f*h*.75f
-            drawCircle(if(dark)Color(0xFFB0D7FF).copy(alpha=.12f+(i%4)*.1f) else Color.White,if(i%4==0)1.7f else .8f,Offset(x,y))
-        }
-        drawCircle(Brush.radialGradient(listOf(Color(0xFF965CDE).copy(alpha=.22f),Color.Transparent),Offset(w*.9f,h*.32f),w*.75f),w*.75f,Offset(w*.9f,h*.32f))
+        drawCircle(Brush.radialGradient(listOf(accent.copy(alpha=if(dark).055f else .035f),Color.Transparent),
+            Offset(w*.9f,h*.12f),w),w,Offset(w*.9f,h*.12f))
     }
 }
 
 @Composable
 fun Cover(url:String,modifier:Modifier=Modifier,description:String?=null) {
-    Box(modifier.clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(Color(0xFF143B59),Color(0xFF213052)))),contentAlignment=Alignment.Center) {
+    Box(modifier.clip(RoundedCornerShape(DesignTokens.Radius.small.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),contentAlignment=Alignment.Center) {
         Icon(Icons.Outlined.MusicNote,description,tint=Blue,modifier=Modifier.size(30.dp))
         val model=artworkModel(url,LocalOffline.current)
         if(model!=null)AsyncImage(model,description,modifier=Modifier.fillMaxSize(),contentScale=ContentScale.Crop,
@@ -120,15 +125,17 @@ fun Cover(url:String,modifier:Modifier=Modifier,description:String?=null) {
 }
 @Composable
 fun PageTitle(title:String,subtitle:String) {
-    Column(Modifier.padding(bottom=16.dp)) {
+    Column(Modifier.padding(bottom=DesignTokens.Spacing.sm.dp)) {
         Text(title,style=MaterialTheme.typography.headlineMedium)
         Text(subtitle,style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.padding(top=4.dp))
     }
 }
 @Composable
 fun EmptyState(title:String,text:String,action:String?=null,onAction:()->Unit={}) {
-    Column(Modifier.fillMaxWidth().glass().padding(22.dp),verticalArrangement=Arrangement.spacedBy(10.dp)) {
-        Icon(Icons.Outlined.MusicNote,null,tint=Blue,modifier=Modifier.size(32.dp))
+    Column(Modifier.fillMaxWidth().glass().padding(DesignTokens.Spacing.xxl.dp),verticalArrangement=Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
+        Box(Modifier.size(60.dp).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.primaryContainer),contentAlignment=Alignment.Center) {
+            Icon(Icons.Outlined.MusicNote,null,tint=Blue,modifier=Modifier.size(28.dp))
+        }
         Text(title,style=MaterialTheme.typography.titleMedium)
         Text(text,color=MaterialTheme.colorScheme.onSurfaceVariant)
         if(action!=null)Button(onAction){Text(action)}
@@ -138,11 +145,11 @@ fun clock(ms:Long):String = "%d:%02d".format(java.util.Locale.ROOT,ms.coerceAtLe
 
 /** Every Material role is intentional: dialogs, chips and sliders share the app palette. */
 internal fun neDotifyColorScheme(dark:Boolean,primary:Color,onPrimary:Color):ColorScheme {
-    val surface=if(dark)Color(0xFF0B1C2C) else Color.White
-    val background=if(dark)Night else Color(0xFFF1F6FB)
-    val ink=if(dark)Color(0xFFF2F7FF) else Color(0xFF112334)
-    val muted=if(dark)Color(0xFFA9C4D9) else Color(0xFF486174)
-    val variant=if(dark)Color(0xFF243747) else Color(0xFFDDE8F0)
+    val surface=if(dark)Color(DesignTokens.Dark.surface) else Color(DesignTokens.Light.surface)
+    val background=if(dark)Color(DesignTokens.Dark.background) else Color(DesignTokens.Light.background)
+    val ink=if(dark)Color(DesignTokens.Dark.onSurface) else Color(DesignTokens.Light.onSurface)
+    val muted=if(dark)Color(DesignTokens.Dark.onSurfaceVariant) else Color(DesignTokens.Light.onSurfaceVariant)
+    val variant=if(dark)Color(DesignTokens.Dark.surfaceRaised) else Color(DesignTokens.Light.surfaceRaised)
     val container=primary.copy(alpha=if(dark).24f else .13f).compositeOver(surface)
     val secondary=if(dark)Color(0xFFA7CEE6) else Color(0xFF35617C)
     val tertiary=if(dark)Color(0xFFFF91C1) else Color(0xFF9C376B)
@@ -155,14 +162,11 @@ internal fun neDotifyColorScheme(dark:Boolean,primary:Color,onPrimary:Color):Col
         background=background,onBackground=ink,surface=surface,onSurface=ink,
         surfaceVariant=variant,onSurfaceVariant=muted,surfaceTint=primary,
         inverseSurface=if(dark)Color(0xFFE2EBF4) else Color(0xFF1C3042),inverseOnSurface=if(dark)Night else Color(0xFFF2F7FF),
-        outline=if(dark)Color(0xFF68859A) else Color(0xFF6D8597),outlineVariant=if(dark)Color(0xFF314B60) else Color(0xFFB8CEDD),
-        scrim=Color.Black,error=if(dark)Color(0xFFFFB4AB) else Color(0xFFBA1A1A),
+        outline=if(dark)Color(DesignTokens.Dark.outline) else Color(DesignTokens.Light.outline),outlineVariant=if(dark)Color(DesignTokens.Dark.outline).copy(alpha=.55f) else Color(DesignTokens.Light.outline).copy(alpha=.35f),
+        scrim=Color.Black,error=if(dark)Color(DesignTokens.Dark.error) else Color(DesignTokens.Light.error),
         onError=if(dark)Color(0xFF690005) else Color.White,errorContainer=if(dark)Color(0xFF93000A) else Color(0xFFFFDAD6),
         onErrorContainer=if(dark)Color(0xFFFFDAD6) else Color(0xFF410002),
-        surfaceBright=if(dark)Color(0xFF314457) else Color.White,surfaceDim=if(dark)Color(0xFF07121D) else Color(0xFFD5E0EA),
-        surfaceContainerLowest=if(dark)Color(0xFF06111B) else Color.White,
-        surfaceContainerLow=if(dark)Color(0xFF0E2131) else Color(0xFFF3F8FC),
-        surfaceContainer=if(dark)Color(0xFF142838) else Color(0xFFEBF2F8),
-        surfaceContainerHigh=if(dark)Color(0xFF1C3042) else Color(0xFFE3EDF5),
-        surfaceContainerHighest=if(dark)Color(0xFF273D50) else Color(0xFFDCE8F1))
+        surfaceBright=variant,surfaceDim=background,
+        surfaceContainerLowest=background,surfaceContainerLow=surface,
+        surfaceContainer=surface,surfaceContainerHigh=variant,surfaceContainerHighest=variant)
 }

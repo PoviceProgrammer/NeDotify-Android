@@ -1,0 +1,191 @@
+{
+  "schemaVersion": 1,
+  "sourceSha": null,
+  "apkSha256": null,
+  "executedUtc": null,
+  "device": {
+    "api": null,
+    "model": null
+  },
+  "status": "NOT_RUN",
+  "reason": "APK builds remain prohibited",
+  "scenarios": [
+    {
+      "id": "D01",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D02",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D03",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D04",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D05",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D06",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D07",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D08",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D09",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D10",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D11",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D12",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D13",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D14",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D15",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D16",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D17",
+      "owner": "U",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D18",
+      "owner": "C",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D19",
+      "owner": "U",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D20",
+      "owner": "U",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D21",
+      "owner": "V",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    },
+    {
+      "id": "D22",
+      "owner": "L",
+      "status": "NOT_RUN",
+      "actualResult": null,
+      "evidence": [],
+      "defects": []
+    }
+  ],
+  "openDefects": []
+}

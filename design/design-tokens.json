@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "colors": {
+    "dark": {
+      "background": "#0A0E17",
+      "surface": "#141B29",
+      "surfaceRaised": "#1D2839",
+      "onSurface": "#F2F5FA",
+      "onSurfaceVariant": "#AAB7CA",
+      "primary": "#4CC9FF",
+      "onPrimary": "#002332",
+      "outline": "#536078",
+      "error": "#FFB4AB"
+    },
+    "light": {
+      "background": "#F6F8FC",
+      "surface": "#FFFFFF",
+      "surfaceRaised": "#E8EEF7",
+      "onSurface": "#111827",
+      "onSurfaceVariant": "#4B5D73",
+      "primary": "#006A94",
+      "onPrimary": "#FFFFFF",
+      "outline": "#66768B",
+      "error": "#BA1A1A"
+    }
+  },
+  "spacing": { "xs": 4, "sm": 8, "md": 12, "lg": 16, "xl": 20, "xxl": 24, "section": 32 },
+  "radius": { "small": 12, "medium": 20, "large": 28 },
+  "typography": {
+    "body": { "size": 16, "lineHeight": 24, "weight": 400 },
+    "bodySmall": { "size": 14, "lineHeight": 20, "weight": 400 },
+    "label": { "size": 12, "lineHeight": 16, "weight": 500 },
+    "title": { "size": 24, "lineHeight": 30, "weight": 600 },
+    "headline": { "size": 28, "lineHeight": 34, "weight": 700 }
+  },
+  "motion": { "fast": 120, "normal": 220, "player": 300 },
+  "layout": { "railBreakpoint": 600, "paneBreakpoint": 840, "touchTarget": 48, "miniPlayerHeight": 68 }
+}

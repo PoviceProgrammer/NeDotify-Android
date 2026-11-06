@@ -1,5 +1,8 @@
 package ru.nedotify.app.ui
 
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -28,11 +31,11 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Composable
-fun ProfileScreen(model:MusicViewModel,onLibrary:(String)->Unit,onSettings:()->Unit) {
+fun ProfileScreen(model:ProfileViewModel,library:LibraryViewModel,downloadsModel:DownloadsViewModel,playback:PlaybackConnection,onLibrary:(String)->Unit,onSettings:()->Unit) {
     val profile by model.profile.collectAsStateWithLifecycle()
-    val favoriteCount by model.favoriteCount.collectAsStateWithLifecycle()
-    val playlists by model.playlists.collectAsStateWithLifecycle()
-    val downloads by model.downloads.collectAsStateWithLifecycle()
+    val favoriteCount by library.favoriteCount.collectAsStateWithLifecycle()
+    val playlists by library.playlists.collectAsStateWithLifecycle()
+    val downloads by downloadsModel.downloads.collectAsStateWithLifecycle()
     val period by model.reportPeriod.collectAsStateWithLifecycle()
     val state by model.report.collectAsStateWithLifecycle()
     var editing by rememberSaveable {mutableStateOf(false)}
@@ -69,7 +72,7 @@ fun ProfileScreen(model:MusicViewModel,onLibrary:(String)->Unit,onSettings:()->U
         else if(report!=null) {
             item {
                 BoxWithConstraints(Modifier.fillMaxWidth()) {
-                    if(maxWidth<330.dp)Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+                    if(maxWidth<330.dp || androidx.compose.ui.platform.LocalDensity.current.fontScale>=1.5f)Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
                         ProfileStatTile("Минут прослушано",(report.totalMs/60_000).toString(),Icons.Outlined.Headphones,Modifier.fillMaxWidth())
                         ProfileStatTile("Любимых треков",favoriteCount.toString(),Icons.Outlined.FavoriteBorder,Modifier.fillMaxWidth()){onLibrary("favorites")}
                         ProfileStatTile("Плейлистов",playlists.size.toString(),Icons.AutoMirrored.Outlined.QueueMusic,Modifier.fillMaxWidth()){onLibrary("playlists")}
@@ -96,7 +99,7 @@ fun ProfileScreen(model:MusicViewModel,onLibrary:(String)->Unit,onSettings:()->U
                     item {Text("Топ треков",style=MaterialTheme.typography.titleLarge)}
                     val topQueue=report.topTracks.map {it.track}
                     items(report.topTracks.take(5),key={"top:${it.track.id}"}) {ranked->
-                        Row(Modifier.fillMaxWidth().glass(14.dp).clickable {model.play(ranked.track,topQueue)}.padding(10.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Row(Modifier.fillMaxWidth().glass(14.dp).clickable {playback.play(ranked.track,topQueue)}.padding(10.dp),verticalAlignment=Alignment.CenterVertically) {
                             Cover(ranked.track.coverUrl,Modifier.size(48.dp))
                             Column(Modifier.weight(1f).padding(horizontal=12.dp)) {
                                 Text(ranked.track.title,maxLines=2,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodyMedium,fontWeight=FontWeight.Medium)
@@ -134,7 +137,7 @@ fun ProfileScreen(model:MusicViewModel,onLibrary:(String)->Unit,onSettings:()->U
             val queue=report.history.mapNotNull {it.track}.distinctBy {it.id}
             items(report.history.take(historyLimit),key={"history:${it.session.id}"}) {entry->
                 val track=entry.track
-                Column(Modifier.fillMaxWidth().glass(14.dp).then(if(track!=null)Modifier.clickable {model.play(track,queue)} else Modifier).padding(13.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
+                Column(Modifier.fillMaxWidth().glass(14.dp).then(if(track!=null)Modifier.clickable {playback.play(track,queue)} else Modifier).padding(13.dp),verticalArrangement=Arrangement.spacedBy(3.dp)) {
                     Text(track?.title?:"Трек удалён из библиотеки",maxLines=2,overflow=TextOverflow.Ellipsis,fontWeight=FontWeight.Medium)
                     if(track!=null)Text(track.artist,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                     Text("${historyDate(entry.session.startedAt)} · ${listeningTime(entry.session.listenedMs)} прослушано",style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)

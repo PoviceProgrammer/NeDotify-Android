@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>NeDotify — UI prototype A / B / C</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%230A0E17'/%3E%3Cpath d='M26 45V20l22-4v25M26 25l22-4' stroke='%234CC9FF' stroke-width='5' fill='none'/%3E%3Ccircle cx='19' cy='45' r='8' fill='%234CC9FF'/%3E%3Ccircle cx='41' cy='41' r='8' fill='%234CC9FF'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <aside class="lab" aria-label="Управление прототипом">
+    <div class="lab-brand"><span class="brand-mark">♫</span><span>NeDotify <small>ANDROID / UI LAB</small></span></div>
+    <h1>Музыка.<br>По-твоему.</h1>
+    <p class="lab-intro">Три направления одного приложения. Сравните главный экран и плеер на одинаковой коллекции.</p>
+    <label>Сценарий<select id="scenario"><option value="populated">Моя коллекция</option><option value="empty">Пустая коллекция</option><option value="loading">Загрузка</option><option value="error">Ошибка источника</option><option value="partial">Частичный результат</option><option value="offline">Офлайн</option><option value="long">Длинные названия</option></select></label>
+    <label>Размер окна<select id="viewport"><option value="412">Телефон · 412 dp</option><option value="360">Телефон · 360 dp</option><option value="320">Узкий · 320 dp</option><option value="840">Планшет · 840 dp</option></select></label>
+    <div class="lab-buttons"><button id="theme-toggle">Светлая тема</button><button id="text-toggle">Текст 200%</button></div>
+    <div class="lab-note"><strong>Кликабельный прототип</strong><p>Треки, прогресс, загрузки и статистика демонстрационные. Аудио и сеть не используются. Обновление страницы сбрасывает изменения.</p></div>
+    <details><summary>Задания для сравнения</summary><ol><li>Включите недавний трек.</li><li>Найдите «Тихий берег».</li><li>Откройте скачанный плейлист.</li><li>Переставьте запись в очереди.</li></ol><button id="task-start">Начать замер</button><output id="task-result">Замер не запущен</output></details>
+    <details><summary>Текущее состояние</summary><pre id="state-inspector"></pre></details>
+    <p class="lab-footer">W1 · Дизайн на оценке<br>Выбран B · Коллекция и скорость.</p>
+  </aside>
+  <main class="stage">
+    <div class="stage-caption"><span id="variant-caption">A / ОБЛОЖКА И НАСТРОЕНИЕ</span><span>Нативный Android · Compose target</span></div>
+    <section class="device" id="device" aria-label="Предпросмотр NeDotify">
+      <div class="statusbar" aria-hidden="true"><span>9:41</span><span>▂▄▆ &nbsp; ◔ &nbsp; ▰</span></div>
+      <div id="app" class="app"></div>
+      <div class="gesture-handle" aria-hidden="true"></div>
+    </section>
+    <p class="stage-help">Всё основное можно нажимать · ← → переключают варианты</p>
+  </main>
+  <nav class="variant-switcher" aria-label="Сравнение вариантов">
+    <button id="variant-prev" aria-label="Предыдущий вариант">←</button>
+    <button class="variant-choice" data-variant="A">A <span>Настроение</span></button>
+    <button class="variant-choice" data-variant="B">B <span>Коллекция</span></button>
+    <button class="variant-choice" data-variant="C">C <span>Быстрый выбор</span></button>
+    <button id="variant-next" aria-label="Следующий вариант">→</button>
+  </nav>
+  <script src="app.js"></script>
+</body>
+</html>

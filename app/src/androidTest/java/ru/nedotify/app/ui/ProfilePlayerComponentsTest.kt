@@ -6,6 +6,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.Assert.assertEquals
@@ -82,6 +84,19 @@ class ProfilePlayerComponentsTest {
         content {MiniPlayerBar(NowPlaying(id="track",buffering=true,playWhenReady=false),0,false,{opened++},{toggled++},{})}
         compose.onNodeWithContentDescription("Воспроизвести").performClick()
         compose.runOnIdle {assertEquals(1,toggled);assertEquals(0,opened)}
+    }
+
+    @Test fun repeatedAndShuffledTransportModesAreExposedToAccessibility() {
+        content {PlayerTransport(NowPlaying(id="track",shuffle=true,repeat=1),{},{},{},{},{})}
+        compose.onNodeWithContentDescription("Перемешивание").assertIsOn()
+        compose.onNodeWithContentDescription("Режим повтора")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription,"Один трек"))
+    }
+
+    @Test fun mediaPositionBeyondDurationCannotExposeAnOutOfRangeProgressBar() {
+        content {MiniPlayerBar(NowPlaying(id="track",duration=10_000),50_000,false,{},{},{})}
+        compose.onNodeWithContentDescription("Прогресс воспроизведения")
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.ProgressBarRangeInfo,ProgressBarRangeInfo(1f,0f..1f)))
     }
 
     @Test fun zeroBaselineDoesNotInventPercentageGrowth() {

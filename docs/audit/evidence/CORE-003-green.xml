@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ru.nedotify.app.ui.MediaControllerConnectorTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-11-06T06:10:13.439Z" hostname="DESKTOP-LB3GK64" time="0.029">
+  <properties/>
+  <testcase name="a disconnect builds a new controller" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.008"/>
+  <testcase name="an explicit retry replaces a cancelled initial connection" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.01"/>
+  <testcase name="a closed connector builds nothing again" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.0"/>
+  <testcase name="a second connect does not build a second controller" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.0"/>
+  <testcase name="an explicit retry replaces a failed connection without duplicating a pending attempt" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.003"/>
+  <testcase name="the dead controller is released" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.001"/>
+  <testcase name="a synchronous build failure leaves the next explicit attempt possible" classname="ru.nedotify.app.ui.MediaControllerConnectorTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+// Diagnostic loop only. The normal source/CI gate must run without this filter.
+gradle.projectsEvaluated {
+    gradle.rootProject.allprojects {
+        tasks.withType(org.gradle.api.tasks.testing.Test).configureEach {
+            maxHeapSize = '256m'
+            maxParallelForks = 1
+            jvmArgs '-XX:ActiveProcessorCount=2', '-XX:ReservedCodeCacheSize=64m'
+            filter {
+                includeTestsMatching 'ru.nedotify.app.data.CatalogImportControllerTest'
+            }
+        }
+    }
+}
