@@ -3,8 +3,10 @@
 - Latest user instruction permits subagents specifically to WRITE code in parallel,
   not merely to review the main agent's changes. Keep file ownership separate.
   Do not simulate independent review or report it as completed without real reports.
-- The user currently forbids building APKs. Use explicit compile/unit/lint tasks;
-  do not run assemble/package tasks. verify.ps1 now defaults to source-only checks.
+- On 2026-11-06 the user authorized a debug APK for manual testing. Build
+  `:app:assembleDebug` and deliver the APK with source identity and SHA-256.
+  Source-only verification remains separate. Device installation/execution and
+  release publishing require their own authorization; the user will test this APK.
 - Native Kotlin / Compose / Media3. No desktop Python runtime or WebView shell.
 - Keep changes inside android/ unless a desktop export or other shared change is
   explicitly needed and described.

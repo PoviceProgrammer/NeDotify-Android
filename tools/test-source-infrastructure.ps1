@@ -201,3 +201,8 @@ try {
         Remove-Item -LiteralPath $resolved -Recurse -Force
     } else { throw 'Refusing to clean an unexpected fixture directory.' }
 }
+
+# Expected rejection cases launch a subprocess that exits nonzero. Assertions
+# above consume that result; do not leak its LASTEXITCODE into the CI pwsh host.
+# An uncaught assertion/cleanup failure terminates the script before this line.
+exit 0
