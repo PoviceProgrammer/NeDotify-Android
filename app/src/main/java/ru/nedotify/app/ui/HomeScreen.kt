@@ -1,68 +1,95 @@
 package ru.nedotify.app.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import java.time.LocalTime
 import androidx.lifecycle.repeatOnLifecycle
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+import java.time.LocalTime
 
+/** B: collection and recent music lead; every count and recommendation comes from device data. */
 @Composable
-fun HomeScreen(model:MusicViewModel,onImport:()->Unit,onSearch:()->Unit,onLibrary:(String)->Unit) {
+fun HomeScreen(model:HomeViewModel,library:LibraryViewModel,downloads:DownloadsViewModel,playback:PlaybackConnection,
+    onImport:()->Unit,onSearch:()->Unit,onLibrary:(String)->Unit,onOpenPlaylist:(String)->Unit={library.openPlaylist(it)}) {
     val tracks by model.tracks.collectAsStateWithLifecycle()
     val recent by model.recent.collectAsStateWithLifecycle()
     val playlists by model.playlists.collectAsStateWithLifecycle()
     val recommendations by model.discovery.recommendation.collectAsStateWithLifecycle()
-    LaunchedEffect(model.discovery) { model.discovery.loadRecommendations() }
     val favorites=remember(tracks){tracks.filter {it.favorite}}
     val local=remember(tracks){tracks.filter {it.source=="local" || it.localUri.isNotBlank()}}
-    val hero=recent.firstOrNull()?:favorites.firstOrNull()?:tracks.firstOrNull()
-    val heroQueue=when {recent.isNotEmpty()->recent;favorites.isNotEmpty()->favorites;else->tracks}
-    LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(horizontal=20.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(18.dp)) {
-        item(key="heading") {
-            GreetingTitle()
+    LaunchedEffect(model.discovery) {model.discovery.loadRecommendations()}
+    LazyColumn(Modifier.fillMaxSize(),contentPadding=PaddingValues(horizontal=DesignTokens.Spacing.xl.dp,vertical=DesignTokens.Spacing.md.dp),
+        verticalArrangement=Arrangement.spacedBy(DesignTokens.Spacing.lg.dp)) {
+        item(key="heading") {GreetingTitle()}
+        item(key="collection-command") {
+            Column(Modifier.fillMaxWidth().glass().clickable(role=Role.Button,onClickLabel="Открыть коллекцию",onClick={onLibrary("all")})
+                .padding(DesignTokens.Spacing.xl.dp),verticalArrangement=Arrangement.spacedBy(DesignTokens.Spacing.md.dp)) {
+                Row(Modifier.fillMaxWidth(),verticalAlignment=Alignment.CenterVertically) {
+                    Icon(Icons.Outlined.LibraryMusic,null,tint=Blue,modifier=Modifier.size(28.dp))
+                    Column(Modifier.weight(1f).padding(horizontal=12.dp)) {
+                        Text("Ваша коллекция",style=MaterialTheme.typography.titleMedium)
+                        Text("${tracks.size} треков · ${playlists.size} плейлистов",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.AutoMirrored.Outlined.ArrowForward,null,tint=Blue)
+                }
+            }
         }
         item(key="shortcuts") {
-            LazyRow(horizontalArrangement=Arrangement.spacedBy(8.dp)) {
-                item {BrowseChip("Вся музыка",Icons.Outlined.MusicNote){onLibrary("all")}}
+            LazyRow(horizontalArrangement=Arrangement.spacedBy(DesignTokens.Spacing.sm.dp)) {
                 item {BrowseChip("Любимые · ${favorites.size}",Icons.Outlined.FavoriteBorder){onLibrary("favorites")}}
-                item {BrowseChip("Плейлисты · ${playlists.size}",Icons.Outlined.LibraryMusic){onLibrary("playlists")}}
+                item {BrowseChip("Скачано",Icons.Outlined.Download){onLibrary("downloads")}}
                 item {BrowseChip("На устройстве · ${local.size}",Icons.Outlined.FolderOpen){onLibrary("local")}}
+                item {BrowseChip("Поиск",Icons.Outlined.Search,onSearch)}
             }
         }
-        item(key="hero") {
-            CollectionHero(hero,onPlay={hero?.let {model.play(it,heroQueue)}},onSearch=onSearch,onImport=onImport)
-        }
-        item(key="flow") { PersonalFlowCard { model.startFlow() } }
-        item(key="recommendations") { RecommendationSection(recommendations, model.discovery::refreshRecommendations, model::play) }
         if(recent.isNotEmpty()) {
-            item(key="recent-title") {BrowseHeading("Недавно прослушано","Все треки"){onLibrary("all")}}
-            item(key="recent") {
-                LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    items(recent,key={it.id}) {track->BrowseMusicCard(track){model.play(track,recent)}}
+            item(key="recent-heading") {BrowseHeading("Недавно слушали","Вся коллекция"){onLibrary("all")}}
+            items(recent.take(4),key={"recent:${it.id}"}) {track->LibraryTrackRow(track,library,downloads,playback,recent)}
+        }
+        if(tracks.isEmpty()) {
+            item(key="empty") {EmptyState("Здесь начнётся ваша музыка","Добавьте аудиофайлы или найдите любимую запись.","Добавить файлы",onImport)}
+            item(key="empty-search") {OutlinedButton(onSearch,Modifier.fillMaxWidth().heightIn(min=48.dp)) {Icon(Icons.Outlined.Search,null);Spacer(Modifier.width(8.dp));Text("Найти музыку")}}
+        } else {
+            item(key="flow") {PersonalFlowCard {playback.startFlow()}}
+        }
+        if(playlists.isNotEmpty()) {
+            item(key="playlist-heading") {BrowseHeading("Мои плейлисты","Все"){onLibrary("playlists")}}
+            items(playlists.take(3),key={"playlist:${it.playlist.id}"}) {item->
+                Row(Modifier.fillMaxWidth().heightIn(min=76.dp).clickable(role=Role.Button,onClick={onOpenPlaylist(item.playlist.id)})
+                    .padding(vertical=8.dp),verticalAlignment=Alignment.CenterVertically) {
+                    Box(Modifier.size(52.dp).background(MaterialTheme.colorScheme.surfaceContainerHigh,RoundedCornerShape(DesignTokens.Radius.small.dp)),contentAlignment=Alignment.Center) {Icon(Icons.Outlined.LibraryMusic,null,tint=Blue)}
+                    Column(Modifier.weight(1f).padding(horizontal=12.dp)) {
+                        Text(item.playlist.name,style=MaterialTheme.typography.bodyMedium,maxLines=2,overflow=androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Text("${item.count} треков",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Icon(Icons.AutoMirrored.Outlined.ArrowForward,null,Modifier.size(18.dp),tint=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
+        item(key="recommendations") {RecommendationSection(recommendations,model.discovery::refreshRecommendations,playback::play)}
         if(favorites.isNotEmpty()) {
-            item(key="favorites-title") {BrowseHeading("Любимые треки","Показать все"){onLibrary("favorites")}}
-            item(key="favorites") {
-                LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                    items(favorites.take(12),key={it.id}) {track->BrowseMusicCard(track){model.play(track,favorites)}}
-                }
-            }
+            item(key="favorites-heading") {BrowseHeading("Любимая музыка","Все"){onLibrary("favorites")}}
+            item(key="favorites") {LazyRow(horizontalArrangement=Arrangement.spacedBy(12.dp)) {items(favorites.take(8),key={it.id}) {track->BrowseMusicCard(track){playback.play(track,favorites)}}}}
         }
-        item(key="collection-title") {BrowseHeading("Твоя коллекция",if(tracks.isNotEmpty())"Показать все" else null){onLibrary("all")}}
-        if(tracks.isEmpty())item(key="empty") {
-            EmptyState("Начни свою коллекцию","Найденные и добавленные треки появятся здесь. Любимая музыка будет всегда рядом.","Добавить файлы",onImport)
+        if(recent.isEmpty() && tracks.isNotEmpty()) {
+            item(key="tracks-heading") {BrowseHeading("Треки коллекции","Все"){onLibrary("all")}}
+            items(tracks.take(5),key={"track:${it.id}"}) {track->LibraryTrackRow(track,library,downloads,playback,tracks,allowDelete=true)}
         }
-        items(tracks.take(10),key={"collection:${it.id}"}) {TrackRow(it,model,tracks,allowDelete=true)}
         item(key="bottom-space") {Spacer(Modifier.height(8.dp))}
     }
 }
@@ -75,5 +102,5 @@ private fun GreetingTitle() {
             while(true) {value=LocalTime.now().hour;kotlinx.coroutines.delay(60_000)}
         }
     }
-    PageTitle(greeting(hour),"Музыка делает всё лучше")
+    PageTitle(greeting(hour),"Побудьте в своём ритме")
 }

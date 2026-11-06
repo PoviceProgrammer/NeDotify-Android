@@ -15,7 +15,8 @@ param(
     [string]$SdkPath = $env:ANDROID_HOME,
     [string]$JavaHome = $env:JAVA_HOME,
     # Source checks are safe by default: APK packaging now requires explicit tasks.
-    [string[]]$Tasks = @(':app:testDebugUnitTest', ':app:lintDebug', ':app:compileDebugAndroidTestKotlin')
+    [string[]]$Tasks = @(':app:compileDebugKotlin', ':app:compileReleaseKotlin',
+        ':app:testDebugUnitTest', ':app:lintDebug', ':app:compileDebugAndroidTestKotlin')
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'tools/SourceTasks.ps1')

@@ -1,56 +1,49 @@
 ﻿{
-    "generated_utc":  "2026-10-20T19:01:37.0037607Z",
+    "scope":  "source-gate-only",
+    "separate_apk_evidence":  "review/implementation/APK.json",
+    "generated_utc":  "2026-11-06T07:12:01.0697786Z",
     "source":  [
                    "app/build/test-results/testDebugUnitTest/*.xml (JUnit XML of :app:testDebugUnitTest)",
                    "app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt (:app:lintDebug)",
                    "app/src/androidTest/**/*.kt (@Test methods, compiled only)"
                ],
     "freshness":  {
-                      "newest_source":  "build.gradle",
-                      "newest_source_utc":  "2026-10-20T18:55:31.4909002Z",
-                      "junit_xml_utc":  "2026-10-20T18:58:55.5406813Z",
-                      "lint_report_utc":  "2026-10-20T19:00:54.1969668Z",
+                      "newest_source":  ".github/workflows/android-source.yml",
+                      "newest_source_utc":  "2026-11-06T07:05:30.4554273Z",
+                      "junit_xml_utc":  "2026-11-06T07:08:50.9239555Z",
+                      "lint_report_utc":  "2026-11-06T07:10:14.5230789Z",
                       "newer_than_every_source":  true
                   },
+    "build_evidence":  {
+                           "schemaVersion":  1,
+                           "startedUtc":  "2026-11-06T07:05:31.3554130Z",
+                           "finishedUtc":  "2026-11-06T07:10:30.4991877Z",
+                           "tasks":  [
+                                         ":app:compileDebugKotlin",
+                                         ":app:compileReleaseKotlin",
+                                         ":app:testDebugUnitTest",
+                                         ":app:lintDebug",
+                                         ":app:compileDebugAndroidTestKotlin"
+                                     ],
+                           "exitCode":  0,
+                           "sourceDigest":  "a45c8d94c420e2f110693d0f16a25bd8dc3cea0ee3e6d89992e2fdc3658faaaa",
+                           "sourceUnchanged":  true,
+                           "failure":  null,
+                           "apkPackaging":  "NOT_RUN",
+                           "instrumentationExecution":  "NOT_RUN",
+                           "deviceAcceptance":  "NOT_RUN"
+                       },
     "unit":  {
-                 "tests":  604,
-                 "passed":  604,
+                 "tests":  633,
+                 "passed":  633,
                  "failures":  0,
                  "errors":  0,
                  "skipped":  0,
-                 "test_files":  82,
+                 "test_files":  87,
                  "classes":  [
                                  {
-                                     "class":  "ru.nedotify.app.downloads.DownloadKeysTest",
-                                     "tests":  5,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.downloads.DownloadPolicyTest",
-                                     "tests":  14,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.downloads.DownloadGateTest",
-                                     "tests":  2,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.YouTubeMetadataTest",
-                                     "tests":  3,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.downloads.DownloadCancellationTest",
-                                     "tests":  1,
+                                     "class":  "ru.nedotify.app.downloads.MediaStatusTest",
+                                     "tests":  4,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -63,15 +56,15 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.CrossfadePolicyTest",
-                                     "tests":  10,
+                                     "class":  "ru.nedotify.app.downloads.ForegroundFailureTest",
+                                     "tests":  2,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.downloads.MediaStatusTest",
-                                     "tests":  4,
+                                     "class":  "ru.nedotify.app.downloads.DownloadPolicyTest",
+                                     "tests":  14,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -84,7 +77,63 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.downloads.ForegroundFailureTest",
+                                     "class":  "ru.nedotify.app.player.ListeningHistoryTest",
+                                     "tests":  3,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.MediaButtonPlayTest",
+                                     "tests":  2,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.ListeningClockTest",
+                                     "tests":  2,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.CrossfadePolicyTest",
+                                     "tests":  10,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.HistoryWriteWiringTest",
+                                     "tests":  2,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.downloads.DownloadKeysTest",
+                                     "tests":  5,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SourceContractTest",
+                                     "tests":  4,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SourceDeadlineTest",
+                                     "tests":  3,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SoundCloudSingleFlightTest",
                                      "tests":  2,
                                      "failures":  0,
                                      "errors":  0,
@@ -105,22 +154,22 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.SmartObservationTest",
+                                     "class":  "ru.nedotify.app.downloads.DownloadCancellationTest",
                                      "tests":  1,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.SecureProviderStoreTest",
-                                     "tests":  14,
+                                     "class":  "ru.nedotify.app.downloads.DownloadGateTest",
+                                     "tests":  2,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.SignedUrlExpiryTest",
-                                     "tests":  4,
+                                     "class":  "ru.nedotify.app.data.YouTubeMetadataTest",
+                                     "tests":  3,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -140,85 +189,8 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.SourceDeadlineTest",
-                                     "tests":  3,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.SoundCloudSingleFlightTest",
-                                     "tests":  2,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.SourceContractTest",
-                                     "tests":  4,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.player.HistoryWriteWiringTest",
-                                     "tests":  2,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.MediaControllerConnectorTest",
-                                     "tests":  4,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.NowPlayingQueueTest",
-                                     "tests":  5,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.ConnectionsControlsTest",
-                                     "tests":  4,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.player.StreamingCacheEvictorTest",
-                                     "tests":  1,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.player.TrackMediaItemsTest",
-                                     "tests":  7,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.PlayerErrorStateTest",
-                                     "tests":  7,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.UiPoliciesTest",
-                                     "tests":  13,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.ui.PlaybackPreparationTest",
-                                     "tests":  8,
+                                     "class":  "ru.nedotify.app.player.PendingSelectionGateTest",
+                                     "tests":  14,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -238,8 +210,85 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.PendingSelectionGateTest",
-                                     "tests":  14,
+                                     "class":  "ru.nedotify.app.ui.NowPlayingQueueTest",
+                                     "tests":  5,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.DesignTokenConsumptionTest",
+                                     "tests":  2,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.MediaControllerConnectorTest",
+                                     "tests":  7,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.UiOwnershipArchitectureTest",
+                                     "tests":  1,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.UiPoliciesTest",
+                                     "tests":  13,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.SearchRequestControllerTest",
+                                     "tests":  8,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.PlaybackPreparationTest",
+                                     "tests":  8,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.PlayerErrorStateTest",
+                                     "tests":  7,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.ui.ConnectionsControlsTest",
+                                     "tests":  4,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.QueueBoundaryTest",
+                                     "tests":  4,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.QueueCheckpointListenerTest",
+                                     "tests":  3,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.PlaybackRefusalTest",
+                                     "tests":  6,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -252,22 +301,29 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.MediaButtonPlayTest",
-                                     "tests":  2,
+                                     "class":  "ru.nedotify.app.player.PlaybackMutationTest",
+                                     "tests":  5,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.ListeningClockTest",
-                                     "tests":  2,
+                                     "class":  "ru.nedotify.app.player.TrackMediaItemsTest",
+                                     "tests":  7,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.ListeningHistoryTest",
-                                     "tests":  3,
+                                     "class":  "ru.nedotify.app.ui.AppNavigationTest",
+                                     "tests":  11,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.player.StreamingCacheEvictorTest",
+                                     "tests":  1,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -287,29 +343,8 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.player.QueueBoundaryTest",
-                                     "tests":  4,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.player.PlaybackMutationTest",
-                                     "tests":  5,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.player.PlaybackRefusalTest",
-                                     "tests":  6,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ImageHttpTest",
-                                     "tests":  3,
+                                     "class":  "ru.nedotify.app.data.SmartObservationTest",
+                                     "tests":  1,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -322,15 +357,15 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.DiscoveryRankingTest",
-                                     "tests":  4,
+                                     "class":  "ru.nedotify.app.data.LibraryWriteFenceTest",
+                                     "tests":  13,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.DesktopRowsTest",
-                                     "tests":  2,
+                                     "class":  "ru.nedotify.app.data.ImageHttpTest",
+                                     "tests":  3,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -343,7 +378,7 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.LocalImportBatchTest",
+                                     "class":  "ru.nedotify.app.data.DiscoveryRankingTest",
                                      "tests":  4,
                                      "failures":  0,
                                      "errors":  0,
@@ -357,15 +392,15 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.ListeningReportsTest",
-                                     "tests":  12,
+                                     "class":  "ru.nedotify.app.data.LyricsCascadeTest",
+                                     "tests":  9,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.LibraryWriteFenceTest",
-                                     "tests":  13,
+                                     "class":  "ru.nedotify.app.data.LocalImportBatchTest",
+                                     "tests":  4,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -373,6 +408,20 @@
                                  {
                                      "class":  "ru.nedotify.app.data.LibraryWritesTest",
                                      "tests":  1,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.ListeningReportsTest",
+                                     "tests":  12,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.DesktopRowsTest",
+                                     "tests":  2,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -428,7 +477,7 @@
                                  },
                                  {
                                      "class":  "ru.nedotify.app.data.CatalogImportControllerTest",
-                                     "tests":  13,
+                                     "tests":  14,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -448,64 +497,8 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.LyricsCascadeTest",
-                                     "tests":  9,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ProviderConnectionsTest",
-                                     "tests":  46,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ProviderMappingTest",
-                                     "tests":  1,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ProviderAuthTest",
-                                     "tests":  10,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.PreferencesStoreTest",
-                                     "tests":  17,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ProfileSettingsTest",
-                                     "tests":  9,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.SavedQueueTest",
-                                     "tests":  3,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.SearchAggregateTest",
+                                     "class":  "ru.nedotify.app.data.LyricsDataTest",
                                      "tests":  6,
-                                     "failures":  0,
-                                     "errors":  0,
-                                     "skipped":  0
-                                 },
-                                 {
-                                     "class":  "ru.nedotify.app.data.ResolutionCascadeTest",
-                                     "tests":  11,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -525,7 +518,63 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.MediaIdentityTest",
+                                     "class":  "ru.nedotify.app.data.ProviderMappingTest",
+                                     "tests":  1,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.ProviderAuthTest",
+                                     "tests":  10,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.ProviderConnectionsTest",
+                                     "tests":  46,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SecureProviderStoreTest",
+                                     "tests":  14,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SignedUrlExpiryTest",
+                                     "tests":  4,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SearchAggregateTest",
+                                     "tests":  6,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.ResolutionCascadeTest",
+                                     "tests":  11,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.SavedQueueTest",
+                                     "tests":  3,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.ProfileSettingsTest",
                                      "tests":  9,
                                      "failures":  0,
                                      "errors":  0,
@@ -539,15 +588,15 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.MediaHttpTest",
+                                     "class":  "ru.nedotify.app.data.MediaUrlPolicyTest",
                                      "tests":  14,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.LyricsDataTest",
-                                     "tests":  6,
+                                     "class":  "ru.nedotify.app.data.MediaIdentityTest",
+                                     "tests":  9,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -560,8 +609,8 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.OnlineSourceTest",
-                                     "tests":  3,
+                                     "class":  "ru.nedotify.app.data.MediaHttpTest",
+                                     "tests":  14,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -574,15 +623,15 @@
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.NetworkBoundsQualityTest",
-                                     "tests":  8,
+                                     "class":  "ru.nedotify.app.data.PreferencesStoreTest",
+                                     "tests":  17,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
                                  },
                                  {
-                                     "class":  "ru.nedotify.app.data.MediaUrlPolicyTest",
-                                     "tests":  14,
+                                     "class":  "ru.nedotify.app.data.OnlineSourceTest",
+                                     "tests":  3,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -590,6 +639,13 @@
                                  {
                                      "class":  "ru.nedotify.app.data.MediaWiringTest",
                                      "tests":  4,
+                                     "failures":  0,
+                                     "errors":  0,
+                                     "skipped":  0
+                                 },
+                                 {
+                                     "class":  "ru.nedotify.app.data.NetworkBoundsQualityTest",
+                                     "tests":  8,
                                      "failures":  0,
                                      "errors":  0,
                                      "skipped":  0
@@ -605,16 +661,16 @@
                                "UseKtx":  1
                            },
                  "report":  "app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt",
-                 "generated_utc":  "2026-10-20T19:00:54.1969668Z",
+                 "generated_utc":  "2026-11-06T07:10:14.5230789Z",
                  "findings":  [
                                   {
-                                      "file":  "C:\\Temp\\nedotify-B3544D227D\\project\\app\\src\\main\\AndroidManifest.xml",
+                                      "file":  "app/src/main/AndroidManifest.xml",
                                       "line":  29,
                                       "severity":  "Warning",
                                       "id":  "ExportedService"
                                   },
                                   {
-                                      "file":  "C:\\Temp\\nedotify-B3544D227D\\project\\app\\src\\main\\java\\ru\\nedotify\\app\\data\\LibraryRepository.kt",
+                                      "file":  "app/src/main/java/ru/nedotify/app/data/LibraryRepository.kt",
                                       "line":  198,
                                       "severity":  "Warning",
                                       "id":  "UseKtx"
@@ -622,13 +678,13 @@
                               ]
              },
     "instrumentation":  {
-                            "compiled_tests":  68,
-                            "test_files":  18,
+                            "compiled_tests":  79,
+                            "test_files":  22,
                             "executed":  false
                         },
     "snapshot":  {
-                     "files":  254,
-                     "manifest_sha256":  "fc5ee57d1ae4e2c58115c542692205974839eb3c5f1377b769a42db818b8bae1",
+                     "files":  325,
+                     "manifest_sha256":  "aae2386f334652763894b8842421e0b8375b48bb50d099855b1ec03e590f6273",
                      "new":  [
 
                              ],

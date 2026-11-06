@@ -1,0 +1,21 @@
+# ID — short trigger and symptom
+
+- Area / owner:
+- Baseline source SHA / tested tree identity:
+- APK SHA-256, version, device/API (when available):
+- Preconditions:
+- Reproduction steps:
+- Expected result:
+- Actual result:
+- Repeatability: N / M
+- Severity / priority / impact rationale:
+- CODE: status, source identity, path:line and evidence
+- TEST: status, exact command, result/log and tested source identity
+- DEVICE: PASS / FAIL / BLOCKED / NOT_RUN, evidence
+- Blocked milestones / acceptance IDs:
+- Workaround / containment:
+- Ranked hypotheses (for diagnosis):
+- Fix / regression:
+- Estimate / target milestone:
+- Exit criteria:
+- Status:

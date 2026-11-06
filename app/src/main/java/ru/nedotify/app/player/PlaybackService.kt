@@ -179,6 +179,7 @@ class PlaybackService:MediaSessionService() {
                     if(commands.contains(Player.COMMAND_PREPARE)){retryCount=0;recovery?.cancel()}
                 }
             }).build()
+        decks.addListener(QueueCheckpointListener(::checkpointQueue))
         decks.addListener(object:Player.Listener {
             override fun onMediaItemTransition(item:MediaItem?,reason:Int) {
                 recovery?.cancel();retryCount=0
@@ -199,8 +200,6 @@ class PlaybackService:MediaSessionService() {
             }
             override fun onEvents(player:Player,events:Player.Events) {
                 updatePolling()
-                if(events.containsAny(Player.EVENT_MEDIA_ITEM_TRANSITION,Player.EVENT_IS_PLAYING_CHANGED,Player.EVENT_REPEAT_MODE_CHANGED,
-                        Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED,Player.EVENT_TIMELINE_CHANGED,Player.EVENT_POSITION_DISCONTINUITY))checkpointQueue()
             }
             override fun onPlaybackStateChanged(state:Int) {if(state==Player.STATE_ENDED)history.checkpoint(true)}
             override fun onPlayerError(error:PlaybackException) {

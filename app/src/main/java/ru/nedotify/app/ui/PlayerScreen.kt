@@ -26,62 +26,86 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ru.nedotify.app.data.*
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
 
 @Composable
-fun PlayerScreen(model:MusicViewModel) {
-    val now by model.playback.collectAsStateWithLifecycle()
-    val tracks by model.tracks.collectAsStateWithLifecycle()
-    val lyrics by model.lyricsState.collectAsStateWithLifecycle()
-    val appearance by model.appearance.collectAsStateWithLifecycle()
+fun PlayerScreen(playback:PlaybackConnection,library:LibraryViewModel,lyricsModel:LyricsViewModel,settings:SettingsViewModel) {
+    val now by playback.playback.collectAsStateWithLifecycle()
+    val tracks by library.tracks.collectAsStateWithLifecycle()
+    val lyrics by lyricsModel.lyricsState.collectAsStateWithLifecycle()
+    val appearance by settings.appearance.collectAsStateWithLifecycle()
     var tab by rememberSaveable {mutableIntStateOf(0)}
     val trackIndex=remember(tracks){tracks.associateBy {it.id}}
     val current=trackIndex[now.id]
     val queueKeys=remember(now.queue){queueItemKeys(now.queue)}
-    LaunchedEffect(now.id,tab){if(tab==1 && now.id.isNotBlank())model.loadLyrics()}
-    Column(Modifier.fillMaxWidth().fillMaxHeight(.94f).padding(horizontal=20.dp)) {
+    LaunchedEffect(now.id,tab){if(tab==2 && now.id.isNotBlank())lyricsModel.loadLyrics()}
+    Column(Modifier.fillMaxSize().padding(horizontal=DesignTokens.Spacing.xl.dp)) {
         Text("Сейчас играет",style=MaterialTheme.typography.titleMedium,modifier=Modifier.align(Alignment.CenterHorizontally).padding(bottom=8.dp))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.Center) {
-            listOf("Плеер","Текст","Очередь").forEachIndexed {index,title->
-                FilterChip(tab==index,{tab=index},label={Text(title)},modifier=Modifier.padding(horizontal=4.dp))
+            listOf("Плеер","Очередь","Текст").forEachIndexed {index,title->
+                FilterChip(tab==index,{tab=index},label={Text(title)},modifier=Modifier.padding(horizontal=4.dp).heightIn(min=48.dp))
             }
         }
         when(tab) {
             0->BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
-                val wide=maxWidth>500.dp && maxHeight<400.dp
-                val coverSize=if(wide)136.dp else minOf(maxWidth,320.dp,maxHeight*.62f).coerceAtLeast(96.dp)
-                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top=12.dp),verticalArrangement=Arrangement.spacedBy(8.dp)) {
-                    if(wide) Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
+                val wide=maxWidth>500.dp && maxHeight<420.dp
+                val coverSize=if(wide)148.dp else minOf(maxWidth,190.dp,maxHeight*.40f).coerceAtLeast(88.dp)
+                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(top=12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
+                    if(wide)Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(20.dp)) {
                         Cover(now.artwork,Modifier.size(coverSize),now.title)
-                        TrackHeading(now,current?.favorite, current?.let {track->{model.favorite(track)}})
+                        Box(Modifier.weight(1f)){TrackHeading(now,current?.favorite,current?.let {track->{library.favorite(track)}})}
                     } else {
                         Cover(now.artwork,Modifier.size(coverSize).align(Alignment.CenterHorizontally),now.title)
-                        TrackHeading(now,current?.favorite,current?.let {track->{model.favorite(track)}})
+                        TrackHeading(now,current?.favorite,current?.let {track->{library.favorite(track)}})
                     }
-                    PlayerTimeline(model,now.id,now.duration)
+                    PlayerTimeline(playback,now.id,now.duration)
+                    current?.source?.takeIf {it.isNotBlank()}?.let {source->
+                        Text(when(source){"local"->"На устройстве";"soundcloud"->"SoundCloud";"youtube"->"YouTube Music · экспериментально";else->source},
+                            style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant,modifier=Modifier.align(Alignment.CenterHorizontally))
+                    }
+                    val nextIndices=((now.activeIndex+1).coerceAtLeast(0)..now.queue.lastIndex).take(2)
+                    if(nextIndices.isNotEmpty())Column(Modifier.fillMaxWidth().glass().padding(12.dp)) {
+                        BrowseHeading("Далее","Вся очередь"){tab=1}
+                        nextIndices.forEach {index->val item=now.queue[index]
+                            Row(Modifier.fillMaxWidth().heightIn(min=68.dp).clickable(onClickLabel="Слушать ${item.title}"){playback.queueIndex(index)}
+                                .padding(vertical=8.dp),verticalAlignment=Alignment.CenterVertically) {
+                                Cover(item.artwork,Modifier.size(40.dp))
+                                Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
+                                    Text(item.title,style=MaterialTheme.typography.bodyMedium,maxLines=2,overflow=TextOverflow.Ellipsis)
+                                    Text(item.artist,style=MaterialTheme.typography.bodySmall,maxLines=1,overflow=TextOverflow.Ellipsis,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
                 }
             }
-            1->LyricsHost(model,lyrics,now.id,now.duration,appearance.lyricsAutoScroll,Modifier.weight(1f).fillMaxWidth())
+            2->LyricsHost(playback,lyricsModel,lyrics,now.id,now.duration,appearance.lyricsAutoScroll,Modifier.weight(1f).fillMaxWidth())
             else->LazyColumn(Modifier.weight(1f).fillMaxWidth(),contentPadding=PaddingValues(vertical=14.dp),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 if(now.queue.isEmpty())item {EmptyState("Очередь пуста","Выберите трек в библиотеке или поиске")}
-                if(now.queue.size>1)item(key="clear-queue") {TextButton(model::clearQueue) {Text("Очистить очередь, оставив текущий трек")}}
+                if(now.queue.size>1)item(key="clear-queue") {TextButton(playback::clearQueue) {Text("Очистить очередь, оставив текущий трек")}}
                 itemsIndexed(now.queue,key={index,_->queueKeys[index]}) {index,item->
                     val active=index==now.activeIndex
                     var menu by remember {mutableStateOf(false)}
-                    Row(Modifier.fillMaxWidth().glass(12.dp).clickable {model.queueIndex(index)}.semantics {selected=active}.padding(horizontal=12.dp,vertical=14.dp),verticalAlignment=Alignment.CenterVertically) {
-                        Text("${index+1}",modifier=Modifier.width(30.dp),color=if(active)Blue else MaterialTheme.colorScheme.onSurfaceVariant)
-                        Cover(item.artwork,Modifier.size(44.dp))
-                        Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
-                            Text(item.title.ifBlank {"Без названия"},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(active)Blue else MaterialTheme.colorScheme.onSurface)
-                            Text(item.artist,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                    Row(Modifier.fillMaxWidth().glass(12.dp).heightIn(min=80.dp).semantics {selected=active}.padding(start=8.dp),verticalAlignment=Alignment.CenterVertically) {
+                        Row(Modifier.weight(1f).clickable(onClickLabel="Слушать ${item.title}"){playback.queueIndex(index)}.padding(vertical=12.dp),verticalAlignment=Alignment.CenterVertically) {
+                            Box(Modifier.width(26.dp),contentAlignment=Alignment.Center) {
+                                if(active)Icon(Icons.Outlined.GraphicEq,"Текущий трек",tint=Blue,modifier=Modifier.size(18.dp))
+                                else Text("${index+1}",style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Cover(item.artwork,Modifier.size(44.dp))
+                            Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
+                                Text(item.title.ifBlank {"Без названия"},maxLines=2,overflow=TextOverflow.Ellipsis,color=if(active)Blue else MaterialTheme.colorScheme.onSurface,style=MaterialTheme.typography.bodyMedium)
+                                Text(item.artist,maxLines=2,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                                (item.durationMs.takeIf {it>0}?:trackIndex[item.id]?.durationMs)?.takeIf {it>0}?.let {Text(clock(it),style=MaterialTheme.typography.labelMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+                            }
                         }
-                        (item.durationMs.takeIf {it>0}?:trackIndex[item.id]?.durationMs)?.takeIf {it>0}?.let {Text(clock(it),style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
-                        if(active)Icon(Icons.Outlined.GraphicEq,"Текущий трек",tint=Blue,modifier=Modifier.padding(start=8.dp))
                         Box {
-                            IconButton({menu=true}){Icon(Icons.Outlined.MoreVert,"Действия в очереди: ${item.second}")}
+                            IconButton({menu=true},Modifier.size(48.dp)){Icon(Icons.Outlined.MoreVert,"Действия в очереди: ${item.title}")}
                             DropdownMenu(menu,{menu=false}) {
-                                DropdownMenuItem(text={Text("Выше")},enabled=index>0,onClick={menu=false;model.moveQueueItem(index,index-1)})
-                                DropdownMenuItem(text={Text("Ниже")},enabled=index<now.queue.lastIndex,onClick={menu=false;model.moveQueueItem(index,index+1)})
-                                DropdownMenuItem(text={Text("Убрать из очереди")},onClick={menu=false;model.removeQueueItem(index)})
+                                DropdownMenuItem(text={Text("Выше")},enabled=index>0,onClick={menu=false;playback.moveQueueItem(index,index-1)})
+                                DropdownMenuItem(text={Text("Ниже")},enabled=index<now.queue.lastIndex,onClick={menu=false;playback.moveQueueItem(index,index+1)})
+                                DropdownMenuItem(text={Text("Убрать из очереди")},onClick={menu=false;playback.removeQueueItem(index)})
                             }
                         }
                     }
@@ -89,7 +113,7 @@ fun PlayerScreen(model:MusicViewModel) {
             }
         }
         now.error?.let {Text(it,color=MaterialTheme.colorScheme.error,style=MaterialTheme.typography.bodySmall,modifier=Modifier.semantics {liveRegion=LiveRegionMode.Polite}.padding(vertical=6.dp))}
-        PlayerTransport(now,model::shuffle,model::previous,model::toggle,model::next,model::repeat)
+        PlayerTransport(now,playback::shuffle,playback::previous,playback::toggle,playback::next,playback::repeat)
     }
 }
 
@@ -199,7 +223,7 @@ private fun rememberReducedMotion():Boolean {
 
 /** Only the timeline subscribes to the position poll, so a tick never rebuilds artwork/queue. */
 @Composable
-private fun PlayerTimeline(model:MusicViewModel,trackId:String,durationMs:Long) {
+private fun PlayerTimeline(model:PlaybackConnection,trackId:String,durationMs:Long) {
     val position by model.positionMs.collectAsStateWithLifecycle()
     val duration=durationMs.coerceAtLeast(0)
     var scrub by rememberSaveable(trackId) {mutableStateOf<Float?>(null)}
@@ -221,7 +245,7 @@ private fun PlayerTimeline(model:MusicViewModel,trackId:String,durationMs:Long) 
 }
 
 @Composable
-private fun LyricsHost(model:MusicViewModel,lyrics:LyricsState,id:String,duration:Long,follow:Boolean,modifier:Modifier) {
+private fun LyricsHost(model:PlaybackConnection,lyricsModel:LyricsViewModel,lyrics:LyricsState,id:String,duration:Long,follow:Boolean,modifier:Modifier) {
     val position by model.positionMs.collectAsStateWithLifecycle()
-    LyricsContent(lyrics,id,position,duration,follow,modifier,model::seek,model::retryLyrics)
+    LyricsContent(lyrics,id,position,duration,follow,modifier,model::seek,lyricsModel::retryLyrics)
 }

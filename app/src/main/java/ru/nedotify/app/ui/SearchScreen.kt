@@ -1,5 +1,8 @@
 package ru.nedotify.app.ui
 
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -27,50 +30,59 @@ import ru.nedotify.app.data.SearchResultGroup
 import ru.nedotify.app.data.SearchResultGroups
 
 @Composable
-fun SearchScreen(model:MusicViewModel) {
-    var query by rememberSaveable {mutableStateOf("")}
-    var source by rememberSaveable {mutableStateOf("all")}
-    var category by rememberSaveable {mutableStateOf("tracks")}
-    var selectedGroupKey by rememberSaveable(query,source,category) {mutableStateOf<String?>(null)}
+fun SearchScreen(model:SearchViewModel,library:LibraryViewModel,downloads:DownloadsViewModel,playback:PlaybackConnection) {
+    val query by model.query.collectAsStateWithLifecycle()
+    val source by model.source.collectAsStateWithLifecycle()
+    val category by model.category.collectAsStateWithLifecycle()
+    val selectedGroupKey by model.selectedGroupKey.collectAsStateWithLifecycle()
     val result by model.search.collectAsStateWithLifecycle()
     val history by model.searchHistory.collectAsStateWithLifecycle()
-    val appearance by model.appearance.collectAsStateWithLifecycle()
+    val offline by model.offline.collectAsStateWithLifecycle()
     val keyboard=LocalSoftwareKeyboardController.current
     val listState=rememberLazyListState()
+    var previousCategory by rememberSaveable {mutableStateOf(category)}
+    var previousGroupKey by rememberSaveable {mutableStateOf(selectedGroupKey)}
     val groups=remember(result.tracks,category) {when(category){"artists"->SearchResultGroups.artists(result.tracks);"albums"->SearchResultGroups.albums(result.tracks);else->emptyList()}}
     val selectedGroup=groups.firstOrNull {it.key==selectedGroupKey}
     fun submit(value:String=query) {
-        query=value
+        model.setQuery(value)
         if(value.isNotBlank())model.rememberSearch(value)
         model.search(value,source)
         keyboard?.hide()
     }
-    LaunchedEffect(appearance.offline){if(appearance.offline)source="local"}
-    LaunchedEffect(query,source){model.search(query,source)}
-    LaunchedEffect(category,selectedGroupKey){listState.scrollToItem(0)}
+    DisposableEffect(model) {model.onActive(true);onDispose {model.onActive(false)}}
+    LaunchedEffect(category,selectedGroupKey) {
+        // A recreated route restores its list position. Only a user-visible
+        // category/group change starts a different list at the beginning.
+        if(previousCategory!=category || previousGroupKey!=selectedGroupKey) {
+            previousCategory=category
+            previousGroupKey=selectedGroupKey
+            listState.scrollToItem(0)
+        }
+    }
     LazyColumn(Modifier.fillMaxSize(),state=listState,contentPadding=PaddingValues(horizontal=20.dp,vertical=12.dp),verticalArrangement=Arrangement.spacedBy(12.dp)) {
         item(key="heading") {PageTitle("Поиск","Найдите свою музыку")}
         item(key="query") {
-            OutlinedTextField(query,{query=it.take(200)},modifier=Modifier.fillMaxWidth(),placeholder={Text("Трек или исполнитель")},
+            OutlinedTextField(query,{model.setQuery(it.take(200))},modifier=Modifier.fillMaxWidth(),placeholder={Text("Трек или исполнитель")},
                 label={Text("Поиск музыки")},singleLine=true,leadingIcon={Icon(Icons.Outlined.Search,null)},
-                trailingIcon={if(query.isNotEmpty())IconButton({query=""}){Icon(Icons.Outlined.Close,"Очистить запрос")}},
+                trailingIcon={if(query.isNotEmpty())IconButton({model.setQuery("")}){Icon(Icons.Outlined.Close,"Очистить запрос")}},
                 keyboardOptions=KeyboardOptions(imeAction=ImeAction.Search),keyboardActions=KeyboardActions(onSearch={submit()}),
                 shape=androidx.compose.foundation.shape.RoundedCornerShape(16.dp))
         }
         item(key="sources") {
             Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 listOf("all" to "Все","soundcloud" to "SoundCloud","youtube" to "YouTube Music","local" to "На устройстве").forEach {(id,name)->
-                    FilterChip(selected=source==id,onClick={source=id},enabled=!appearance.offline || id=="local",label={Text(name)},
+                    FilterChip(selected=source==id,onClick={model.setSource(id)},enabled=!offline || id=="local",label={Text(name)},
                         modifier=Modifier.heightIn(min=48.dp),leadingIcon={Icon(when(id){"all"->Icons.Outlined.Search;"soundcloud"->Icons.Outlined.Cloud;"youtube"->Icons.Outlined.PlayCircle;else->Icons.Outlined.FolderOpen},null,Modifier.size(17.dp))})
                 }
             }
         }
-        if(appearance.offline)item(key="offline") {Text("Офлайн: поиск по локальным и полностью скачанным трекам",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
+        if(offline)item(key="offline") {Text("Офлайн: поиск по локальным и полностью скачанным трекам",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         if(source=="youtube")item(key="youtube-note") {Text("YouTube Music может ограничивать доступ. В таком случае попробуйте другой источник.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}
         item(key="categories") {
             Row(Modifier.horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)) {
                 listOf("tracks" to "Треки","artists" to "Исполнители","albums" to "Альбомы").forEach {(id,title)->
-                    FilterChip(category==id,{category=id},label={Text(title)},modifier=Modifier.heightIn(min=48.dp))
+                    FilterChip(category==id,{model.setCategory(id)},label={Text(title)},modifier=Modifier.heightIn(min=48.dp))
                 }
             }
         }
@@ -88,6 +100,7 @@ fun SearchScreen(model:MusicViewModel) {
                     Text("Ищем музыку…",style=MaterialTheme.typography.bodyMedium,color=MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
+            result.warning?.let {warning->item(key="partial-warning") {Text(warning,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)}}
             result.error?.let {error->item(key="error") {EmptyState("Поиск не завершён",error,"Повторить",{model.search(query,source)})}}
             if(!result.busy && result.error==null && result.tracks.isEmpty())item(key="no-results") {
                 EmptyState("Ничего не найдено",if(source=="local")"Проверьте название. Добавить аудиофайлы можно в библиотеке или настройках." else "Попробуйте другое название или источник.")
@@ -96,7 +109,7 @@ fun SearchScreen(model:MusicViewModel) {
                 if(category=="tracks") {
                     item(key="results-title") {Text("Найдено треков: ${result.tracks.size}",style=MaterialTheme.typography.titleMedium)}
                     items(result.tracks,key={"result:${it.id}"}) {track->
-                        TrackRow(track,model,result.tracks,onPlay={model.rememberSearch(query);keyboard?.hide();model.play(track,result.tracks)})
+                        LibraryTrackRow(track,library,downloads,playback,result.tracks,onPlay={model.rememberSearch(query);keyboard?.hide();playback.play(track,result.tracks)})
                     }
                 } else if(selectedGroup==null) {
                     item(key="groups-title") {
@@ -107,20 +120,20 @@ fun SearchScreen(model:MusicViewModel) {
                     }
                     if(groups.isEmpty())item(key="no-groups") {EmptyState("Нет сведений",if(category=="artists")"У найденных треков не указан исполнитель." else "У найденных треков не указан альбом. Посмотрите вкладку «Треки».")}
                     items(groups,key={"group:${it.key}"}) {group->
-                        SearchGroupRow(group,onOpen={selectedGroupKey=group.key},onPlay={
-                            model.rememberSearch(query);keyboard?.hide();model.play(group.tracks.first(),group.tracks)
+                        SearchGroupRow(group,onOpen={model.selectGroup(group.key)},onPlay={
+                            model.rememberSearch(query);keyboard?.hide();playback.play(group.tracks.first(),group.tracks)
                         })
                     }
                 } else {
                     item(key="group-heading") {
                         Column(verticalArrangement=Arrangement.spacedBy(4.dp)) {
-                            TextButton({selectedGroupKey=null}) {Icon(Icons.AutoMirrored.Outlined.ArrowBack,null);Spacer(Modifier.width(6.dp));Text(if(category=="artists")"К исполнителям" else "К альбомам")}
+                            TextButton({model.selectGroup("")}) {Icon(Icons.AutoMirrored.Outlined.ArrowBack,null);Spacer(Modifier.width(6.dp));Text(if(category=="artists")"К исполнителям" else "К альбомам")}
                             Text(selectedGroup.title,style=MaterialTheme.typography.titleLarge)
                             Text("Найдено треков: ${selectedGroup.tracks.size}",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                     items(selectedGroup.tracks,key={"group-track:${it.id}"}) {track->
-                        TrackRow(track,model,selectedGroup.tracks,onPlay={model.rememberSearch(query);keyboard?.hide();model.play(track,selectedGroup.tracks)})
+                        LibraryTrackRow(track,library,downloads,playback,selectedGroup.tracks,onPlay={model.rememberSearch(query);keyboard?.hide();playback.play(track,selectedGroup.tracks)})
                     }
                 }
             }

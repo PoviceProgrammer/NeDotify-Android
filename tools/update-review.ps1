@@ -64,6 +64,22 @@ $classes = @($classes | Sort-Object class)
 # newer than this file.
 $newestSource = Get-ReviewNewestSource $project
 if (-not $newestSource) { throw 'No source files found under the Android project.' }
+$invocationPath = Join-Path $project 'app/build/reports/source-gate/run.json'
+if (-not (Test-Path -LiteralPath $invocationPath)) {
+    throw 'No source build evidence. Run tools/run-source-build.ps1 -RerunTasks first.'
+}
+$invocation = Get-Content -LiteralPath $invocationPath -Raw | ConvertFrom-Json
+$requiredTasks = @(':app:compileDebugKotlin', ':app:compileReleaseKotlin', ':app:testDebugUnitTest', ':app:lintDebug', ':app:compileDebugAndroidTestKotlin')
+if ($invocation.exitCode -ne 0 -or -not $invocation.sourceUnchanged -or
+    $invocation.sourceDigest -ne (Get-ReviewTreeDigest $project)) {
+    throw 'Source build evidence is failed or belongs to another source tree. Rerun tools/run-source-build.ps1.'
+}
+foreach ($task in $requiredTasks) {
+    if ($task -cnotin $invocation.tasks) { throw "Source evidence is missing task $task." }
+}
+if ([DateTime]::Parse($invocation.finishedUtc).ToUniversalTime() -lt $newestSource.LastWriteTimeUtc) {
+    throw 'Source build evidence predates the current sources.'
+}
 $oldestResult = $files | Sort-Object LastWriteTimeUtc | Select-Object -First 1
 if ($newestSource.LastWriteTimeUtc -gt $oldestResult.LastWriteTimeUtc) {
     throw "The JUnit XML predates the sources (newest source: $($newestSource.path)). Rerun the JVM gate with -RerunTasks."
@@ -99,7 +115,7 @@ foreach ($match in [regex]::Matches($text, $finding)) {
     $bySeverity[$severity]++
     # The report carries the path of the ASCII junction, not the path of the
     # tree. The published artefact must not hold a machine-local path.
-    $file = $match.Groups['file'].Value
+    $file = $match.Groups['file'].Value.Replace('\', '/')
     $marker = '/project/'
     $index = $file.LastIndexOf($marker)
     $relative = if ($index -ge 0) { $file.Substring($index + $marker.Length).Replace('\', '/') } else { $file }
@@ -145,6 +161,8 @@ $drift = Compare-ReviewSnapshot $project
 $manifestHash = if (Test-Path -LiteralPath $manifest) { Get-ReviewFileHash $manifest } else { '' }
 
 $summary = [ordered]@{
+    scope = 'source-gate-only'
+    separate_apk_evidence = 'review/implementation/APK.json'
     generated_utc = [DateTime]::UtcNow.ToString('o')
     source = @(
         'app/build/test-results/testDebugUnitTest/*.xml (JUnit XML of :app:testDebugUnitTest)',
@@ -158,6 +176,7 @@ $summary = [ordered]@{
         lint_report_utc = $lintTime.ToString('o')
         newer_than_every_source = $true
     }
+    build_evidence = $invocation
     unit = [ordered]@{
         tests = $counts.tests; passed = $counts.tests - $counts.skipped
         failures = $counts.failures; errors = $counts.errors; skipped = $counts.skipped
@@ -178,9 +197,11 @@ $summary | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $projec
 
 # --- the current snapshot ----------------------------------------------------
 $snapshot = [ordered]@{
+    scope = 'source-gate-only'
+    separate_apk_evidence = 'review/implementation/APK.json'
     generated_utc = [DateTime]::UtcNow.ToString('o')
     date = (Get-Date).ToString('yyyy-MM-dd')
-    stage = 'remediation-a8'
+    stage = 'standalone-ui-foundation'
     files = $drift.checked
     manifest_sha256 = $manifestHash
     unit_tests = $counts.tests
@@ -206,22 +227,29 @@ $driftText = "новых $($drift.new.Count), изменённых $($drift.chan
 $validation = @'
 # Android: проверка исходников — {{DATE}}
 
-_Сгенерировано `android/tools/update-review.ps1` из реальных результатов
+_Сгенерировано `tools/update-review.ps1` из реальных результатов
 прогона. Правка вручную этого файла невозможна: числа должны совпадать с
 `review/TEST_SUMMARY.json` и `review/SNAPSHOT.json`, а все три файла
 создаются одним разбором одного прогона._
 
-- **BUILD SUCCESSFUL**: `:app:testDebugUnitTest`, `:app:lintDebug`,
-  `:app:compileDebugAndroidTestKotlin`. Ни одной задачи `assemble*`/`bundle*`/
-  `package*` не выполнялось; APK не собирался; устройство не включалось.
+- **BUILD SUCCESSFUL**: `:app:compileDebugKotlin`, `:app:compileReleaseKotlin`,
+  `:app:testDebugUnitTest`, `:app:lintDebug`,
+  `:app:compileDebugAndroidTestKotlin`. Вызваны только эти пять разрешённых
+  source-задач. Сам source-gate не упаковывает APK/AAB и не запускает Android.
+  Разрешённая debug-сборка учитывается отдельно в `review/implementation/APK.json`.
+  Вспомогательные задачи упаковки ресурсов и JAR выполняются Gradle автоматически.
 - Команда (из корня репозитория):
 
-      powershell -NoProfile -File android/tools/run-unit-tests.ps1 -Tasks ':app:testDebugUnitTest,:app:lintDebug,:app:compileDebugAndroidTestKotlin' -Summarize
+      powershell -NoProfile -File tools/run-source-build.ps1 -RerunTasks
+
+  Успешный запуск и digest исходников зафиксированы в
+  `app/build/reports/source-gate/run.json`. Изменение дерева во время или после
+  запуска делает доказательство непригодным для этого отчёта.
 
 - **JVM: {{TESTS}} тестов, {{FAILURES}} failures, {{ERRORS}} errors, {{SKIPPED}} skipped**
   ({{FILES}} файлов JUnit XML).
   * Пропущенных тестов **нет**: сетевой `LiveProviderProbeTest` не «пропущен»,
-    а **исключён** из прогона (`android/app/build.gradle`, `tasks.withType(Test)`,
+    а **исключён** из прогона (`app/build.gradle`, `tasks.withType(Test)`,
     `exclude '**/LiveProviderProbeTest*'`). Он запускается только с
     `-PliveProviderProbes=true`.
 - **Lint: {{LINT_ERRORS}} errors, {{LINT_WARNINGS}} warnings, {{LINT_HINTS}} hints.**
@@ -234,7 +262,7 @@ _Сгенерировано `android/tools/update-review.ps1` из реальн�
 
   Подавлены только две вещи, и обе поименно:
   * **PropertyEscape** — для одного машинно-локального файла
-    (`android/local.properties`, `android/lint.xml`); остальные файлы
+    (`local.properties`, `lint.xml`); остальные файлы
     свойств проверяются как обычно;
   * три детектора «доступна новая версия» (`NewerVersionAvailable`,
     `GradleDependency`, `AndroidGradlePluginVersion`) — они читают репозиторий
@@ -244,8 +272,8 @@ _Сгенерировано `android/tools/update-review.ps1` из реальн�
     `:reportNewerVersions`.
   Все остальные проверки включены, и lint останавливает сборку на ошибке.
 - **{{DEVICE}} инструментальных тестов скомпилированы, НЕ выполнены**
-  ({{DEVICE_FILES}} файлов в `app/src/androidTest`). Ни одного устройства и ни
-  одного эмулятора не было.
+  ({{DEVICE_FILES}} файлов в `app/src/androidTest`). Instrumentation не запускался
+  ни на устройстве, ни на эмуляторе.
 - **Свежесть.** Все числа взяты из прогона, который **новее** самого свежего
   исходника дерева (`{{NEWEST_SOURCE}}`).
 - **Снимок исходников**: файлов в манифесте — {{FILES_TREE}}; расхождений —
@@ -268,12 +296,12 @@ Device-тесты только скомпилированы. Реальная с
 относительные, машинно-локальный путь в манифесте быть не может
 (проверяется при чтении манифеста). Проверка:
 
-    powershell -File android/review/VERIFY.ps1
+    powershell -File review/VERIFY.ps1
 
 печатает новые, изменённые и удалённые файлы и завершается с ошибкой, пока
 манифест не перегенерирован. Перегенерация (после правки всех областей):
 
-    powershell -File android/tools/update-review.ps1 -RefreshSnapshot
+    powershell -File tools/update-review.ps1 -RefreshSnapshot
 
 Ограничения полного переноса — ../PORTING_STATUS.md.
 '@

@@ -24,6 +24,28 @@ class CatalogImportControllerTest {
         }
         override fun clear(){value=null}
     }
+    @Test fun aStartBeforeJournalRecoveryCannotReplaceTheUnfinishedImport()=runTest {
+        val saved=CatalogImportCheckpoint("saved-playlist","spotify","Saved list",
+            listOf(item("a"),item("b")),next=1,accepted=setOf("youtube:a"),createdAt=1234)
+        val journal=MemoryJournal().apply {value=saved}
+        val resolved=mutableListOf<String>()
+        val committed=mutableListOf<String>()
+        val controller=CatalogImportController(backgroundScope,journal,{entry->
+            resolved+=entry.id;track(entry)
+        },{_,value->committed+=value.id})
+
+        // Deliberately do not run the initialization coroutine first: this is a
+        // new request arriving while a process is recovering its saved import.
+        controller.start("spotify","Replacement list",listOf(item("replacement")))
+        runCurrent()
+
+        assertEquals("A new request must not overwrite the recovering journal",saved,journal.value)
+        assertTrue("The replacement must not resolve any tracks",resolved.isEmpty())
+        assertTrue("The replacement must not commit any tracks",committed.isEmpty())
+        assertEquals("Saved list",controller.state.value.title)
+        assertTrue(controller.state.value.paused)
+        assertTrue(controller.state.value.error.orEmpty().contains("сохранённый импорт"))
+    }
     @Test fun completedItemsAreDurableBeforeCancellationAndProcessRecreationResumesRemainingItems()=runTest {
         val journal=MemoryJournal();val commits=linkedSetOf<String>();val requests=mutableListOf<String>()
         val firstScope=CoroutineScope(SupervisorJob()+StandardTestDispatcher(testScheduler))

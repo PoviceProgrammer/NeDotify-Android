@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "sourceSha": "37642cbd7544d8fbdae87ee83c1bb19e515bedfb",
+  "sourceDigest": "249aa30245113511d7d12ff1cac5b37973539e8fefa2a8571b3e63a7fed72e78",
+  "apkSha256": "65d47f1ce2c8a723bc938f324c4421d7b7a85105a6fd15cf2c520e11c3d8844b",
+  "apkPath": "output/NeDotify-B-37642cb-debug.apk",
+  "bytes": 25992571,
+  "packagedUtc": "2026-11-06T07:00:05.4952048Z",
+  "variant": "debug",
+  "applicationId": "ru.nedotify.app.debug",
+  "minSdk": 26,
+  "targetSdk": 37,
+  "signatureVerified": true,
+  "deviceAcceptance": "NOT_RUN",
+  "installation": "NOT_RUN"
+}

@@ -78,6 +78,10 @@ class CatalogImportController internal constructor(private val scope:CoroutineSc
         val bounded=items.take(MAX_ITEMS)
         val notice=if(items.size>MAX_ITEMS)"Обработаны первые $MAX_ITEMS записей" else null
         enqueue({
+            // A new process can receive this start before the journal read has
+            // completed. Recheck after recovery, under enqueue's lock: the
+            // saved request must not be overwritten by that early new start.
+            if(checkpoint!=null)throw SourceFailure("Сначала продолжите или завершите сохранённый импорт")
             CatalogImportCheckpoint(UUID.randomUUID().toString(),provider,title.trim().take(120).ifBlank {"Импорт"},bounded)
                 .also {journal.write(it);checkpoint=it}
         },notice)

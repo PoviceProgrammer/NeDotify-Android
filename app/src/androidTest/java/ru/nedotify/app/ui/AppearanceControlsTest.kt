@@ -20,6 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import ru.nedotify.app.data.Appearance
+import ru.nedotify.app.ui.tokens.DesignTokens
 
 class AppearanceControlsTest {
     @get:Rule val compose=createComposeRule()
@@ -27,7 +28,7 @@ class AppearanceControlsTest {
         compose.setContent {
             NeDotifyTheme(true) {CompositionLocalProvider(LocalGlass provides true,LocalPowerSave provides true) {
                 // No LocalBackdrop is provided: attempting the expensive glass branch would throw.
-                Box(Modifier.glass().padding(20.dp)) {Text("Непрозрачная панель")}
+                Box(Modifier.glass(frosted=true).padding(20.dp)) {Text("Непрозрачная панель")}
             }}
         }
         compose.onNodeWithText("Непрозрачная панель").assertIsDisplayed()
@@ -79,7 +80,7 @@ class AppearanceControlsTest {
             val expected=if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.S) {
                 val system=if(dark.value)dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
                 system.primary to system.onPrimary
-            } else accentColor("cyan",dark.value) to if(dark.value)Color(0xFF001C2D) else Color.White
+            } else accentColor("cyan",dark.value) to if(dark.value)Color(DesignTokens.Dark.onPrimary) else Color(DesignTokens.Light.onPrimary)
             NeDotifyTheme(dark.value,accent="system") {
                 val colors=MaterialTheme.colorScheme
                 SideEffect {
@@ -90,7 +91,7 @@ class AppearanceControlsTest {
         }
         compose.runOnIdle {
             assertEquals(expectedPrimary,actualPrimary);assertEquals(expectedOnPrimary,actualOnPrimary)
-            assertEquals(Color(0xFFF1F6FB),background);dark.value=true
+            assertEquals(Color(DesignTokens.Light.background),background);dark.value=true
         }
         compose.runOnIdle {
             assertEquals(expectedPrimary,actualPrimary);assertEquals(expectedOnPrimary,actualOnPrimary)

@@ -1,5 +1,8 @@
 package ru.nedotify.app.ui
 
+import ru.nedotify.app.ui.state.*
+import ru.nedotify.app.ui.tokens.DesignTokens
+
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,7 +19,7 @@ import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
 @Composable
-fun MiniPlayer(model:MusicViewModel,now:NowPlaying,favorite:Boolean,onOpen:()->Unit,onToggle:()->Unit,onLike:()->Unit) {
+fun MiniPlayer(model:PlaybackConnection,now:NowPlaying,favorite:Boolean,onOpen:()->Unit,onToggle:()->Unit,onLike:()->Unit) {
     // Only the progress bar follows the position: the bar itself is not rebuilt
     // twice a second.
     MiniPlayerLayout(now,favorite,onOpen,onToggle,onLike) { MiniProgress(model,now.duration) }
@@ -29,7 +32,7 @@ internal fun MiniPlayerBar(now:NowPlaying,position:Long,favorite:Boolean,onOpen:
 
 /** The position is collected in the leaf that draws it, never in the bar. */
 @Composable
-private fun MiniProgress(model:MusicViewModel,duration:Long) {
+private fun MiniProgress(model:PlaybackConnection,duration:Long) {
     val position by model.positionMs.collectAsStateWithLifecycle()
     MiniProgressBar(position,duration)
 }
@@ -37,14 +40,14 @@ private fun MiniProgress(model:MusicViewModel,duration:Long) {
 @Composable
 private fun MiniPlayerLayout(now:NowPlaying,favorite:Boolean,onOpen:()->Unit,onToggle:()->Unit,onLike:()->Unit,
     progress:@Composable ()->Unit) {
-    Column(Modifier.padding(horizontal=12.dp,vertical=4.dp).fillMaxWidth().glass(16.dp)
+    Column(Modifier.padding(horizontal=12.dp,vertical=4.dp).fillMaxWidth().glass(DesignTokens.Radius.medium.dp,frosted=true)
         .background(Brush.horizontalGradient(listOf(Blue.copy(alpha=.06f),Blue.copy(alpha=.18f))))
         .border(1.dp,Blue.copy(alpha=.36f),RoundedCornerShape(16.dp)).clickable(onClickLabel="Открыть плеер",onClick=onOpen)) {
         Row(Modifier.padding(horizontal=8.dp,vertical=7.dp),verticalAlignment=Alignment.CenterVertically) {
-            Cover(now.artwork,Modifier.size(44.dp))
+            Cover(now.artwork,Modifier.size(48.dp))
             Column(Modifier.weight(1f).padding(horizontal=10.dp)) {
                 Text(now.title.ifBlank {"Без названия"},maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelLarge)
-                Text(now.artist,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.labelSmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(now.artist,maxLines=1,overflow=TextOverflow.Ellipsis,style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconToggleButton(favorite,{onLike()}) {Icon(if(favorite)Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,if(favorite)"Убрать из избранного" else "В избранное",tint=if(favorite)MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface)}
             FilledTonalIconButton(onToggle,Modifier.size(48.dp).semantics {

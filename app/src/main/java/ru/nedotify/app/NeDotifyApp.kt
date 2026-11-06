@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.collect
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
 class NeDotifyApp:Application(),coil3.SingletonImageLoader.Factory {
     val ioScope=CoroutineScope(SupervisorJob()+Dispatchers.IO)
+    val uiEvents by lazy {ru.nedotify.app.ui.state.UiEvents()}
+    /** One controller connection survives Activity and feature ViewModel recreation. */
+    val playbackConnection by lazy {ru.nedotify.app.ui.state.PlaybackConnection(this)}
     /**
      * One database provider for both media caches.
      *

@@ -10,15 +10,16 @@ import ru.nedotify.app.data.LrcLine
 
 class UiPoliciesTest {
     @Test fun `back returns to the actual screen that opened settings and profile`() {
-        var stack=listOf("home")
-        for(route in listOf("search","profile","settings"))stack=navigateTo(stack,route)
-        stack=navigateBack(stack);assertEquals("profile",stack.last())
-        stack=navigateBack(stack);assertEquals("search",stack.last())
-        stack=navigateBack(stack);assertEquals(listOf("home"),stack)
-        assertEquals(listOf("home"),navigateBack(stack))
+        var navigation=AppNavigationState().selectTab(RootTab.SEARCH)
+            .open(AppDestination(AppPage.PROFILE)).open(AppDestination(AppPage.SETTINGS))
+        navigation=navigation.back();assertEquals(AppPage.PROFILE,navigation.current.page)
+        navigation=navigation.back();assertEquals(AppPage.SEARCH,navigation.current.page)
+        navigation=navigation.back();assertEquals(AppNavigationState(),navigation)
+        assertEquals(AppNavigationState(),navigation.back())
     }
     @Test fun `visiting current screen never adds a duplicate back step`() {
-        assertEquals(listOf("home","search"),navigateTo(listOf("home","search"),"search"))
+        val navigation=AppNavigationState().selectTab(RootTab.SEARCH).open(AppDestination(AppPage.PROFILE))
+        assertEquals(navigation,navigation.open(AppDestination(AppPage.PROFILE)))
     }
     @Test fun `artwork accepts HTTPS and content but rejects executable and file schemes`() {
         assertEquals("https://images.example/a.jpg",artworkModel("https://images.example/a.jpg",false))

@@ -1,21 +1,28 @@
-﻿# Android: проверка исходников — 2026-10-20
+﻿# Android: проверка исходников — 2026-11-06
 
-_Сгенерировано `android/tools/update-review.ps1` из реальных результатов
+_Сгенерировано `tools/update-review.ps1` из реальных результатов
 прогона. Правка вручную этого файла невозможна: числа должны совпадать с
 `review/TEST_SUMMARY.json` и `review/SNAPSHOT.json`, а все три файла
 создаются одним разбором одного прогона._
 
-- **BUILD SUCCESSFUL**: `:app:testDebugUnitTest`, `:app:lintDebug`,
-  `:app:compileDebugAndroidTestKotlin`. Ни одной задачи `assemble*`/`bundle*`/
-  `package*` не выполнялось; APK не собирался; устройство не включалось.
+- **BUILD SUCCESSFUL**: `:app:compileDebugKotlin`, `:app:compileReleaseKotlin`,
+  `:app:testDebugUnitTest`, `:app:lintDebug`,
+  `:app:compileDebugAndroidTestKotlin`. Вызваны только эти пять разрешённых
+  source-задач. Сам source-gate не упаковывает APK/AAB и не запускает Android.
+  Разрешённая debug-сборка учитывается отдельно в `review/implementation/APK.json`.
+  Вспомогательные задачи упаковки ресурсов и JAR выполняются Gradle автоматически.
 - Команда (из корня репозитория):
 
-      powershell -NoProfile -File android/tools/run-unit-tests.ps1 -Tasks ':app:testDebugUnitTest,:app:lintDebug,:app:compileDebugAndroidTestKotlin' -Summarize
+      powershell -NoProfile -File tools/run-source-build.ps1 -RerunTasks
 
-- **JVM: 604 тестов, 0 failures, 0 errors, 0 skipped**
-  (82 файлов JUnit XML).
+  Успешный запуск и digest исходников зафиксированы в
+  `app/build/reports/source-gate/run.json`. Изменение дерева во время или после
+  запуска делает доказательство непригодным для этого отчёта.
+
+- **JVM: 633 тестов, 0 failures, 0 errors, 0 skipped**
+  (87 файлов JUnit XML).
   * Пропущенных тестов **нет**: сетевой `LiveProviderProbeTest` не «пропущен»,
-    а **исключён** из прогона (`android/app/build.gradle`, `tasks.withType(Test)`,
+    а **исключён** из прогона (`app/build.gradle`, `tasks.withType(Test)`,
     `exclude '**/LiveProviderProbeTest*'`). Он запускается только с
     `-PliveProviderProbes=true`.
 - **Lint: 0 errors, 2 warnings, 0 hints.**
@@ -29,7 +36,7 @@ _Сгенерировано `android/tools/update-review.ps1` из реальн�
 
   Подавлены только две вещи, и обе поименно:
   * **PropertyEscape** — для одного машинно-локального файла
-    (`android/local.properties`, `android/lint.xml`); остальные файлы
+    (`local.properties`, `lint.xml`); остальные файлы
     свойств проверяются как обычно;
   * три детектора «доступна новая версия» (`NewerVersionAvailable`,
     `GradleDependency`, `AndroidGradlePluginVersion`) — они читают репозиторий
@@ -38,12 +45,12 @@ _Сгенерировано `android/tools/update-review.ps1` из реальн�
     версиях вынесен в отдельную, **не блокирующую** задачу
     `:reportNewerVersions`.
   Все остальные проверки включены, и lint останавливает сборку на ошибке.
-- **68 инструментальных тестов скомпилированы, НЕ выполнены**
-  (18 файлов в `app/src/androidTest`). Ни одного устройства и ни
-  одного эмулятора не было.
+- **79 инструментальных тестов скомпилированы, НЕ выполнены**
+  (22 файлов в `app/src/androidTest`). Instrumentation не запускался
+  ни на устройстве, ни на эмуляторе.
 - **Свежесть.** Все числа взяты из прогона, который **новее** самого свежего
-  исходника дерева (`build.gradle`).
-- **Снимок исходников**: файлов в манифесте — 254; расхождений —
+  исходника дерева (`.github/workflows/android-source.yml`).
+- **Снимок исходников**: файлов в манифесте — 325; расхождений —
   новых 0, изменённых 0, удалённых 0, не перечисленных 0.
 
 ## Ограничения
@@ -63,11 +70,11 @@ Device-тесты только скомпилированы. Реальная с
 относительные, машинно-локальный путь в манифесте быть не может
 (проверяется при чтении манифеста). Проверка:
 
-    powershell -File android/review/VERIFY.ps1
+    powershell -File review/VERIFY.ps1
 
 печатает новые, изменённые и удалённые файлы и завершается с ошибкой, пока
 манифест не перегенерирован. Перегенерация (после правки всех областей):
 
-    powershell -File android/tools/update-review.ps1 -RefreshSnapshot
+    powershell -File tools/update-review.ps1 -RefreshSnapshot
 
 Ограничения полного переноса — ../PORTING_STATUS.md.

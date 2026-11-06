@@ -1,15 +1,25 @@
 # NeDotify Android
 
+Самостоятельный репозиторий: https://github.com/PoviceProgrammer/NeDotify-Android.
+Новый интерфейс реализуется по этапам: [фактический прогресс](docs/implementation/PROGRESS.md),
+[владение состоянием](docs/implementation/STATE_OWNERSHIP.md), [аудит ядра](docs/audit/README.md).
+Пользователь выбрал вариант B — коллекция и скорость. Compose-экраны подключены
+к отдельным владельцам состояния, общий MusicViewModel удалён. Текущие результаты
+проверок привязаны к снимку в review. 2026-11-06 разрешена debug-сборка APK
+для ручного тестирования пользователем; приёмка на устройстве ещё не выполнена.
+
 Нативный Kotlin / Compose / Room / Media3-порт, без Python и WebView.
 Мобильный референс: [design/reference.png](design/reference.png).
 Состояние всех этапов и ограничения: [PORTING_STATUS.md](PORTING_STATUS.md).
 Проверки исходников: [review/VALIDATION.md](review/VALIDATION.md).
 
-**Новый APK сейчас не собирается по указанию пользователя.** Сохранённый APK
-0.2.0 не содержит JSON/desktop-перенос, новый UI и функции последнего этапа.
+**Debug APK разрешён для ручного тестирования.** Его исходный commit, SHA-256
+и параметры фиксируются в [APK.json](review/implementation/APK.json).
+Сборка: `./gradlew :app:assembleDebug`; результат — `app/build/outputs/apk/debug/app-debug.apk`.
+Это пакет `ru.nedotify.app.debug`, Android 8.0+. Успешная упаковка не подтверждает звук и device-приёмку.
 `Run-Android.bat` **не устанавливает** этот старый APK: `run-emulator.ps1`
 требует явный `-ApkPath` и без него завершается с ошибкой. Для тестирования
-нового кода позже потребуется разрешение собрать свежий APK.
+нового кода используйте только свежий APK с известным hash.
 
 ## Проверка исходников без APK
 
@@ -18,9 +28,9 @@
 compile/target API 37. JDK 17 или 21, SDK Platform 37.0 / Build Tools 36.0.0.
 Groovy DSL обходит воспроизведённую на этом ПК ошибку Gradle Kotlin DSL.
 
-В корне desktop checkout:
+Из корня самостоятельного Android-репозитория:
 
-    ./android/verify.ps1 -Tasks ':app:testDebugUnitTest,:app:lintDebug,:app:compileDebugAndroidTestKotlin'
+    ./tools/run-source-build.ps1 -RerunTasks
 
 При необходимости параметры -SdkPath и -JavaHome задают существующие SDK/JDK.
 Скрипт создаёт ASCII junctions, восстанавливает исходные байты local.properties
@@ -31,7 +41,7 @@ Groovy DSL обходит воспроизведённую на этом ПК о
 (`%LOCALAPPDATA%\Android\Sdk`), а не во временном каталоге: очистка
 временного каталога уносит систему сборки вместе с ним. Канал указания SDK —
 переменные окружения `ANDROID_HOME` / `ANDROID_SDK_ROOT`;
-`android/local.properties` (файл машинно-локальный, в репозитории его нет) —
+`local.properties` (файл машинно-локальный, в репозитории его нет) —
 запасной путь. AGP отдаёт предпочтение файлу, поэтому `verify.ps1` на время
 прогона записывает в файл ASCII-псевдоним SDK и восстанавливает исходные
 байты в `finally`; `tools/run-unit-tests.ps1` файл вообще не трогает и
@@ -41,15 +51,15 @@ Groovy DSL обходит воспроизведённую на этом ПК о
 Тот же набор задач без правки окружения (ASCII junctions создаёт сам,
 local.properties не трогает):
 
-    powershell -NoProfile -File android/tools/run-unit-tests.ps1 -Tasks ':app:testDebugUnitTest,:app:lintDebug,:app:compileDebugAndroidTestKotlin' -Summarize
+    powershell -NoProfile -File tools/run-unit-tests.ps1 -Tasks ':app:compileDebugKotlin,:app:compileReleaseKotlin,:app:testDebugUnitTest,:app:lintDebug,:app:compileDebugAndroidTestKotlin' -Summarize
 
-В обычном окружении из android/:
+Из корня проекта:
 
-    ./gradlew :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin
+    ./gradlew :app:compileDebugKotlin :app:compileReleaseKotlin :app:testDebugUnitTest :app:lintDebug :app:compileDebugAndroidTestKotlin
 
-Список допустимых задач — `android/tools/SourceTasks.ps1`: сборка APK и
-задачи устройства запрещены (`android/AGENTS.md`), попытка вызвать их
-останавливается до запуска Gradle.
+Список задач source-gate — `tools/SourceTasks.ps1`: он проверяет исходники.
+Разрешённая debug-упаковка выполняется отдельным вызовом Gradle. Установка
+и выполнение тестов на устройстве автоматически не запускаются.
 
 ## Зависимости, каталог версий и контроль целостности
 
@@ -64,7 +74,7 @@ local.properties не трогает):
 
 * **Каталог и блокировка обязаны совпадать.** Блокировка сильнее объявленной
   версии: каталог с `core = "1.17.0"` при блокировке `1.18.0` молча собирает
-  1.18.0. Проверка: `powershell -File android/tools/check-catalog-lock.ps1`
+  1.18.0. Проверка: `powershell -File tools/check-catalog-lock.ps1`
   — она **входит в `verify.ps1`** и в CI. Проверка сравнивает версию
   каждой библиотеки с записью блокировки, отдельно проверяет шесть
   библиотек, версию которых задаёт BOM (имя модуля должно быть в блокировке),
@@ -81,8 +91,8 @@ local.properties не трогает):
 * **Обновить метаданные** (только когда состав зависимостей изменился
   осознанно):
 
-      powershell -File android/tools/run-unit-tests.ps1 -Tasks ':app:lintDebug' -RefreshVerificationMetadata
-      powershell -File android/tools/run-unit-tests.ps1 -Tasks ':app:resolveAndLockDependencies' -RefreshLocks
+      powershell -File tools/run-unit-tests.ps1 -Tasks ':app:lintDebug' -RefreshVerificationMetadata
+      powershell -File tools/run-unit-tests.ps1 -Tasks ':app:resolveAndLockDependencies' -RefreshLocks
 
   Метаданные проверяются **при скачивании**: артефакт, уже лежащий в
   локальном кэше Gradle, повторно не хэшируется. Поэтому «обновить
@@ -96,7 +106,7 @@ local.properties не трогает):
 
 ## Lint
 
-Настройка гейта — `android/build.gradle`:
+Настройка гейта — `build.gradle`:
 
     lint { abortOnError = true; checkDependencies = false }
 
@@ -104,7 +114,7 @@ local.properties не трогает):
 * **Проверки зависимостей выключены** (`checkDependencies = false`): они
   требуют разобранного графа зависимостей и делают гейт функцией окружения.
 * **Три детектора «доступна новая версия» выключены в гейте**
-  (`android/lint.xml`: `NewerVersionAvailable`, `GradleDependency`,
+  (`lint.xml`: `NewerVersionAvailable`, `GradleDependency`,
   `AndroidGradlePluginVersion`). Они читают репозиторий **по сети** и
   кэшируют ответ в `app/build/intermediates/lint-cache/…/maven-versions/`;
   аудит измерил для **одного и того же** исходника 15, 13 и 4
@@ -117,20 +127,20 @@ local.properties не трогает):
   `:reportNewerVersions` печатает доступные новые версии каталога и
   **никогда** не роняет сборку. Она не входит в гейт.
 
-    powershell -File android/tools/run-unit-tests.ps1 -Tasks ':reportNewerVersions'
+    powershell -File tools/run-unit-tests.ps1 -Tasks ':reportNewerVersions'
 
 * **PropertyEscape** — единственная проверка, выключенная **для одного
-  файла**: `android/lint.xml` содержит
+  файла**: `lint.xml` содержит
   `<ignore path="local.properties"/>`, то есть путь совпадает с **именем**
   файла, а не с каталогом одной машины. Файл машинно-локальный и
   gitignored, способ записи пути к SDK разный на каждой машине; проверка
   права насчёт формы, но не может ронять сборку из-за файла, которого нет в
-  репозитории. `android/gradle.properties` при этом проверяется как обычно.
+  репозитории. `gradle.properties` при этом проверяется как обычно.
 
 
 ## Release-сборка (без сборки APK)
 
-Конфигурация `android/app/build.gradle`; release-вариант проверен по
+Конфигурация `app/build.gradle`; release-вариант проверен по
 эффективной модели AGP, APK не собирался:
 
 | Свойство | Значение |
@@ -156,8 +166,8 @@ local.properties не трогает):
 
 Проверить конфигурацию без сборки:
 
-    powershell -File android/tools/run-unit-tests.ps1 -Tasks ':app:signingReport'
-    powershell -File android/tools/run-unit-tests.ps1 -Tasks ':dumpVariantModel' -InitScript 'dump-variant-model.gradle'
+    powershell -File tools/run-unit-tests.ps1 -Tasks ':app:signingReport'
+    powershell -File tools/run-unit-tests.ps1 -Tasks ':dumpVariantModel' -InitScript 'dump-variant-model.gradle'
 
 ## Снимок исходников и отчёт о проверках
 
@@ -173,12 +183,12 @@ local.properties не трогает):
 * Отчёт о расхождении называет четыре списка: **новые**, **изменённые**,
   **удалённые** и **«больше не источники, но на диске»** — последний список
   появляется, когда манифест написан по более широкому правилу, чем текущее.
-* Проверка: `powershell -File android/review/VERIFY.ps1` — печатает новые,
+* Проверка: `powershell -File review/VERIFY.ps1` — печатает новые,
   изменённые и удалённые файлы и завершается с ошибкой, пока манифест не
   перегенерирован.
 * Перегенерация (только когда все области закончили правку):
 
-      powershell -File android/tools/update-review.ps1 -RefreshSnapshot
+      powershell -File tools/update-review.ps1 -RefreshSnapshot
 
   Скрипт читает JUnit XML, текстовый отчёт lint и `@Test` в androidTest,
   записывает `review/TEST_SUMMARY.json` и **не** запускает Gradle.
@@ -186,9 +196,10 @@ local.properties не трогает):
 ## CI
 
 `.github/workflows/android-source.yml` — на каждый push/PR, меняющий
-`android/**`: снимок исходников, согласие каталога и блокировки, затем
-`:app:testDebugUnitTest`, `:app:lintDebug`, `:app:compileDebugAndroidTestKotlin`.
-APK не собирается. SDK ставится из репозитория (`platforms;android-37.0`,
+`**`: снимок исходников, согласие каталога и блокировки, затем
+явные `compileDebugKotlin`/`compileReleaseKotlin`, `testDebugUnitTest`,
+`lintDebug`, `compileDebugAndroidTestKotlin` и разрешённая `assembleDebug`.
+SDK ставится из репозитория (`platforms;android-37.0`,
 `build-tools;36.0.0`), локальный путь к SDK не используется.
 
 * **Шаг со снимком — «растяжка» для каждого обычного изменения.** Любой
@@ -295,8 +306,8 @@ Hypervisor Platform; установка вернула RestartNeeded=true. Ав�
 рестарта не было, успешный запуск ускоренного Android не подтверждён.
 
 Run-Android.bat / run-emulator.ps1 проверяет ускорение, открывает видимый
-эмулятор и устанавливает сохранённый APK. **Для новых исходников это пока
-устаревший APK.** Не запускайте launcher для приёмки нового кода до новой сборки.
+эмулятор и устанавливает только явно переданный `-ApkPath`. Для приёмки нужен
+свежий APK с проверенными source/hash; архивный APK выбирать нельзя.
 Диагностика без установки: ./run-emulator.ps1 -CheckOnly.
 
 После разрешённой свежей сборки выполните

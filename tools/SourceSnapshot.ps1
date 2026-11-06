@@ -24,12 +24,15 @@ function Get-ReviewFileHash([string]$Path) {
 
 function Get-ReviewSources([string]$ProjectRoot) {
     $root = (Resolve-Path -LiteralPath $ProjectRoot).Path.TrimEnd('\', '/')
-    Get-ChildItem -LiteralPath $root -Recurse -File | ForEach-Object {
+    # Unix dotfiles (including .github and .gitattributes) are source inputs too.
+    Get-ChildItem -LiteralPath $root -Recurse -File -Force | ForEach-Object {
         $relative = $_.FullName.Substring($root.Length + 1).Replace('\', '/')
-        if ($relative -match '(^|/)(build|\.gradle|\.kotlin|captures)/' -or
+        if ($relative -match '(^|/)(build|\.git|\.gradle|\.kotlin|node_modules|captures|output|\.playwright-cli)/' -or
             $relative -eq 'local.properties' -or
             $relative -like 'local.properties.*.bak' -or
-            ($relative -like 'review/*' -and $_.Extension -ne '.ps1')) { return }
+            $_.Name -like 'hs_err_pid*' -or $_.Name -like 'replay_pid*' -or
+            ($relative -like 'review/*' -and $_.Extension -ne '.ps1' -and
+                $relative -notin @('review/DEVICE_ACCEPTANCE.md', 'review/implementation/scenarios.json'))) { return }
         # The rule set must cover every file whose content the build or the
         # review consumes - including the documentation of the tree itself.
         # A rule set that only covers the code hides the drift of the files
@@ -37,11 +40,25 @@ function Get-ReviewSources([string]$ProjectRoot) {
         $extension = $_.Extension.ToLowerInvariant()
         if ($extension -in @('.kt', '.java', '.xml', '.gradle', '.properties', '.toml', '.ps1',
                 '.bat', '.pro', '.jar', '.py', '.md', '.json', '.png', '.yml', '.yaml',
-                '.txt', '.lockfile') -or
-            $_.Name -eq '.gitignore' -or
+                '.txt', '.lockfile', '.html', '.css', '.js', '.mjs', '.svg') -or
+            $_.Name -in @('.gitignore', '.gitattributes') -or
             $relative -like 'app/schemas/*.json' -or $relative -eq 'gradlew' -or
             $relative -eq 'gradle.lockfile' -or $relative -eq 'app/gradle.lockfile') { $relative }
     } | Sort-Object
+}
+
+# Hashes the actual source tree rather than a potentially stale manifest. Build
+# evidence stores this digest before/after a run, so concurrent source edits can
+# never be reported as verification of one coherent version.
+function Get-ReviewTreeDigest([string]$ProjectRoot) {
+    $lines = @(Get-ReviewSources $ProjectRoot | ForEach-Object {
+        "$(Get-ReviewFileHash (Join-Path $ProjectRoot $_))  $_"
+    })
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = [Text.Encoding]::UTF8.GetBytes(($lines -join "`n") + "`n")
+        return [BitConverter]::ToString($algorithm.ComputeHash($bytes)).Replace('-', '').ToLowerInvariant()
+    } finally { $algorithm.Dispose() }
 }
 
 <#
